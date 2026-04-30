@@ -13,10 +13,15 @@ contract GOLDToken is ERC20, Ownable {
     // List of game contracts authorized to call treasury functions
     mapping(address => bool) public authorizedContracts;
 
+    // Track daily amount of token earned per day
+    mapping(address => uint256) public dailyEarned;
+    mapping(address => uint256) public dailyEarnReset;
+
     // Treasury amount is balance of contract --> implicitly balanceOf(address(this))
     uint256 public constant TREASURY_INITIAL = 1_000_000 * 10**18;
     uint256 public constant DAILY_FAUCET_AMOUNT = 10 * 10**18; // 10 GOLD every 24 hours
     uint256 public constant ENTRY_FEE = 1 * 10**18; // 1 GOLD entry fee for games
+    uint256 public constant DAILY_EARN_CAP = 50 * 10**18;
 
     // ======== Events ========
     event DailyClaimed(address indexed player, uint256 amount, uint256 timestamp);
@@ -37,7 +42,7 @@ contract GOLDToken is ERC20, Ownable {
         // Revert with descriptive message if user already claimed within last 24 hours
         require(block.timestamp >= lastDailyClaim[msg.sender] + 1 days, "Must wait 24 hours between daily faucet claims");
         lastDailyClaim[msg.sender] = block.timestamp;
-        transfer(msg.sender, DAILY_FAUCET_AMOUNT);
+        _transfer(address(this), msg.sender, DAILY_FAUCET_AMOUNT);
         emit DailyClaimed(msg.sender, DAILY_FAUCET_AMOUNT, lastDailyClaim[msg.sender]);
     }
 
@@ -66,9 +71,17 @@ contract GOLDToken is ERC20, Ownable {
 
     // Called by game contracts to pay rewards
     function transferFromTreasury(address to, uint256 amount) external onlyAuthorized {
+        // Reset daily earning cap if more than 24 hours have passed and update reset time
+        if (block.timestamp >= dailyEarnReset[to] + 1 days) {
+            dailyEarned[to] = 0;
+            dailyEarnReset[to] = block.timestamp;
+        }
+        // Enforce daily earning cap
+        require(dailyEarned[to] + amount <= DAILY_EARN_CAP, "Daily earning cap (50 GOLD) reached");
         // Check treasury has enough balance
         require(balanceOf(address(this)) >= amount, "Not enough balance in treasury");
-        transfer(to, amount);
+        dailyEarned[to] += amount;
+        _transfer(address(this), to, amount);
         emit TreasuryTransferred(to, amount);
     }
 
