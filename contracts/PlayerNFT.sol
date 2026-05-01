@@ -51,7 +51,7 @@ contract PlayerNFT is ERC721, Ownable {
     // goldTokenAddress: the deployed GOLDToken contract address (passed at deploy time)
     constructor(address goldTokenAddress) ERC721("BlockCade Player", "BPLAYER") Ownable(msg.sender)
     {
-        goldToken = GOLDToken(goldTokenAddress); // Treat this address as a deploed GOLDToken contract
+        goldToken = GOLDToken(goldTokenAddress); // Treat this address as a deployed GOLDToken contract
     }
 
     // ======== Modifier ========
