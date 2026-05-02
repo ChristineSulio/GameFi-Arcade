@@ -23,8 +23,8 @@ contract WordGuess is Game {
     event GameCompleted(address indexed player, uint8 guessesUsed, uint256 reward);
 
     // ======== Constructor ========
-    constructor(address goldTokenAddress, address playerNFTAddress) 
-        Game(goldTokenAddress, playerNFTAddress) {
+    constructor(address goldTokenAddress, address playerNFTAddress, address leaderboardAddress) 
+        Game(goldTokenAddress, playerNFTAddress, leaderboardAddress) {
         rewards[1] = 20 * 10**18;
         rewards[2] = 15 * 10**18;
         rewards[3] = 10 * 10**18;
@@ -43,7 +43,8 @@ contract WordGuess is Game {
 
         goldToken.transferFromTreasury(msg.sender, rewards[guessesUsed]);
         playerNFT.updateStats(msg.sender, rewards[guessesUsed]);
-        
+        leaderboard.recordWin(msg.sender);
+
         emit GameCompleted(msg.sender, guessesUsed, rewards[guessesUsed]);
     }
 

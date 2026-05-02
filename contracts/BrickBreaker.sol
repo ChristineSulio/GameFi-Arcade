@@ -27,8 +27,8 @@ contract BrickBreaker is Game {
 
     // ======== Constructor ========
 
-    constructor(address goldTokenAddress, address playerNFTAddress) 
-        Game(goldTokenAddress, playerNFTAddress) {
+    constructor(address goldTokenAddress, address playerNFTAddress, address leaderboardAddress) 
+        Game(goldTokenAddress, playerNFTAddress, leaderboardAddress) {
         rewards[1000] = 2 * 10**18;
         rewards[5000] = 7 * 10**18;
         rewards[10000] = 15 * 10**18;
@@ -49,6 +49,7 @@ contract BrickBreaker is Game {
         if (reward > 0) {
             goldToken.transferFromTreasury(msg.sender, reward);
             playerNFT.updateStats(msg.sender, reward);
+            leaderboard.recordWin(msg.sender);
         }
 
         emit GameCompleted(msg.sender, score, reward);

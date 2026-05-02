@@ -26,8 +26,8 @@ contract MemoryMatch is Game {
 
 
     // ======== Constructor ========
-    constructor(address goldTokenAddress, address playerNFTAddress) 
-        Game(goldTokenAddress, playerNFTAddress) {
+    constructor(address goldTokenAddress, address playerNFTAddress, address leaderboardAddress) 
+        Game(goldTokenAddress, playerNFTAddress, leaderboardAddress) {
         rewards[10] = 20 * 10**18;
         rewards[14] = 15 * 10**18;
         rewards[18] = 10 * 10**18;
@@ -49,9 +49,11 @@ contract MemoryMatch is Game {
         else if (attempts <= 18) { reward = rewards[18]; }
         else if (attempts <= 24) { reward = rewards[24]; }
         else if (attempts <= 32) { reward = rewards[32]; }
+        
         if (reward > 0) {
             goldToken.transferFromTreasury(msg.sender, reward);
             playerNFT.updateStats(msg.sender, reward);
+            leaderboard.recordWin(msg.sender);
         }
 
         emit GameCompleted(msg.sender, attempts, reward);

@@ -18,13 +18,13 @@ contract Snake is Game {
 
     // ======== Events ========
 
-    // applesEaten: total number of apples submitted by pkayer
+    // applesEaten: total number of apples submitted by player
     // reward: amount paid out (0 if under 10 apples)
     event GameCompleted(address indexed player, uint256 applesEaten, uint256 reward);
 
     // ======== Constructor ========
-    constructor(address goldTokenAddress, address playerNFTAddress)
-        Game(goldTokenAddress, playerNFTAddress) {
+    constructor(address goldTokenAddress, address playerNFTAddress, address leaderboardAddress)
+        Game(goldTokenAddress, playerNFTAddress, leaderboardAddress) {
 
         rewards[10] = 2 * 10**18;
         rewards[25] = 5 * 10**18;
@@ -50,6 +50,7 @@ contract Snake is Game {
         if (reward > 0) {
             goldToken.transferFromTreasury(msg.sender, reward);
             playerNFT.updateStats(msg.sender, reward);
+            leaderboard.recordWin(msg.sender);
         }
 
         emit GameCompleted(msg.sender, applesEaten, reward);

@@ -24,8 +24,8 @@ contract ConnectFour is Game {
     // ======== Constructor ========
 
     // Accepts deployed contract addresses
-    constructor(address goldTokenAddress, address playerNFTAddress)
-        Game(goldTokenAddress, playerNFTAddress) {}
+    constructor(address goldTokenAddress, address playerNFTAddress, address leaderboardAddress)
+        Game(goldTokenAddress, playerNFTAddress, leaderboardAddress) {}
 
     // ======== Game Functions ========
 
@@ -37,6 +37,7 @@ contract ConnectFour is Game {
         if (won) {
             goldToken.transferFromTreasury(msg.sender, WIN_REWARD);
             playerNFT.updateStats(msg.sender, WIN_REWARD);
+            leaderboard.recordWin(msg.sender);
             emit GameWon(msg.sender, WIN_REWARD);
         } else {
             emit GameLost(msg.sender);
