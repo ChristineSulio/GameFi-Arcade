@@ -10,7 +10,7 @@ pragma solidity ^0.8.28;
 import {GOLDToken} from "./GOLDToken.sol";
 import {PlayerNFT} from "./PlayerNFT.sol";
 
-contract WordGuesser {
+contract WordGuess {
     // State variables
     GOLDToken public goldToken; // referenced to deployed GOLDToken contract for game entry fees and rewards
     PlayerNFT public playerNFT; // reference to deployed player NFT contract to check player registration and updating stats
