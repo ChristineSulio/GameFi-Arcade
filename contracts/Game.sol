@@ -6,14 +6,17 @@ import {PlayerNFT} from "./PlayerNFT.sol";
 
 /* Parent Game contract with base game functionality for all games */
 abstract contract Game {
+    // ======== State Variables ========
     GOLDToken public goldToken;
     PlayerNFT public playerNFT;
-
     mapping(address => bool) public activeGame;
+
+    // ======== Events ========
     event GameStarted(address indexed player);
     event GameForfeited(address indexed player);
 
     constructor(address goldTokenAddress, address playerNFTAddress) {
+        // Initialize deployed contract references
         goldToken = GOLDToken(goldTokenAddress);
         playerNFT = PlayerNFT(playerNFTAddress);
     }
