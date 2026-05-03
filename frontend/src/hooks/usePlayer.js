@@ -1,109 +1,97 @@
 // frontend/src/hooks/usePlayer.js
-// Fetches player state from blockchain and exposes player actions.
-// Returns: playerData (NFT balance, GOLD balance, stats), loading, error, actions (mintNFT, claimFaucet)
+// Manages all on-chain player state for the connected wallet.
+// Exposes: hasNFT, goldBalance, stats, loading, error,
+//          refresh(), mintNFT(), claimFaucet(), formatGold()
 
 import { useState, useEffect, useCallback } from "react";
+import { ethers } from "ethers";
 
-export function usePlayer(account, contracts) {
-  const [playerData, setPlayerData] = useState(null);
+export function usePlayer(contracts, account) {
+  const [hasNFT, setHasNFT] = useState(false);
+  const [goldBalance, setGoldBalance] = useState(0n); // BigInt in wei
+  const [stats, setStats] = useState(null); // { name, level, totalWins, lifetimeEarned }
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  // Fetch player state from chain
-  const fetchPlayerData = useCallback(async () => {
-    if (!account || !contracts) {
-      setPlayerData(null);
-      return;
-    }
-
+  // Read current player state from chain
+  const refresh = useCallback(async () => {
+    if (!contracts || !account) return;
     setLoading(true);
     setError(null);
-
     try {
-      // Check if player has NFT
-      const nftBalance = await contracts.playerNFT.balanceOf(account);
-      const hasNFT = nftBalance > 0n;
+      const _hasNFT = await contracts.playerNFT.hasMinted(account);
+      const _balance = await contracts.goldToken.balanceOf(account);
+      setHasNFT(_hasNFT);
+      setGoldBalance(_balance); // keep as BigInt for ethers.formatEther later
 
-      // Fetch GOLD balance
-      const goldBalance = await contracts.goldToken.balanceOf(account);
-
-      // Fetch stats if NFT owned
-      let stats = null;
-      if (hasNFT) {
-        stats = await contracts.playerNFT.getStats(account);
+      if (_hasNFT) {
+        const [name, level, totalWins, lifetimeEarned] =
+          await contracts.playerNFT.getStats(account);
+        setStats({ name, level, totalWins, lifetimeEarned }); // keep as BigInt
+      } else {
+        setStats(null);
       }
-
-      setPlayerData({
-        account,
-        hasNFT,
-        nftBalance: nftBalance.toString(),
-        goldBalance: goldBalance.toString(),
-        stats: stats
-          ? {
-              name: stats.name,
-              level: stats.level.toString(),
-              totalWins: stats.totalWins.toString(),
-              lifetimeEarned: stats.lifetimeEarned.toString(),
-            }
-          : null,
-      });
     } catch (err) {
       setError(err.message);
-      setPlayerData(null);
     } finally {
       setLoading(false);
     }
-  }, [account, contracts]);
+  }, [contracts, account]);
 
-  // Fetch on mount and when account/contracts change
+  // Auto-refresh when account or contracts change
   useEffect(() => {
-    fetchPlayerData();
-  }, [fetchPlayerData]);
+    refresh();
+  }, [refresh]);
 
-  // Action: Mint player NFT
-  const mintNFT = useCallback(async (name) => {
-    if (!contracts) throw new Error("Contracts not initialized");
-
-    try {
+  // Mint a new Player NFT — refreshes state after confirmation
+  const mintNFT = useCallback(
+    async (name) => {
+      if (!contracts) throw new Error("Contracts not initialized");
       setLoading(true);
-      const tx = await contracts.playerNFT.mint(name);
-      await tx.wait();
       setError(null);
-      await fetchPlayerData(); // Refresh after mint
-    } catch (err) {
-      setError(err.message);
-      throw err;
-    } finally {
-      setLoading(false);
-    }
-  }, [contracts, fetchPlayerData]);
+      try {
+        const tx = await contracts.playerNFT.mint(name);
+        await tx.wait(); // wait for block confirmation
+        await refresh();
+      } catch (err) {
+        setError(err.message);
+        throw err;
+      } finally {
+        setLoading(false);
+      }
+    },
+    [contracts, refresh],
+  );
 
-  // Action: Claim daily GOLD faucet
+  // Claim 10 GOLD from the daily faucet
   const claimFaucet = useCallback(async () => {
-    if (!contracts || !account) throw new Error("Not connected");
-
+    if (!contracts) throw new Error("Contracts not initialized");
+    setLoading(true);
+    setError(null);
     try {
-      setLoading(true);
-      const tx = await contracts.goldToken.dailyClaim(account);
+      const tx = await contracts.goldToken.dailyClaim(); // no args — uses msg.sender
       await tx.wait();
-      setError(null);
-      await fetchPlayerData(); // Refresh after claim
+      await refresh();
     } catch (err) {
       setError(err.message);
       throw err;
     } finally {
       setLoading(false);
     }
-  }, [contracts, account, fetchPlayerData]);
+  }, [contracts, refresh]);
+
+  // Convert BigInt wei to readable GOLD string e.g. 10000000000000000000n → "10.0"
+  const formatGold = (wei) => parseFloat(ethers.formatEther(wei)).toFixed(1);
 
   return {
-    playerData,
+    hasNFT,
+    goldBalance,
+    stats,
     loading,
     error,
-    actions: {
-      mintNFT,
-      claimFaucet,
-      refetch: fetchPlayerData,
-    },
+    refresh,
+    mintNFT,
+    claimFaucet,
+    formatGold,
   };
 }
