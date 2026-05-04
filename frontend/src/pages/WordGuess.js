@@ -3,6 +3,17 @@
 // Contract flow: startGame() → guess words → submitResult(guessCount) on win, forfeit() on loss
 
 import { useState, useEffect, useCallback, useRef } from 'react';
+import QuitModal from '../components/QuitModal';
+import RewardPanel from '../components/RewardPanel';
+
+const WG_REWARDS = [
+  { label: '1 guess',  reward: '20 GOLD', threshold: 1 },
+  { label: '2 guesses',reward: '15 GOLD', threshold: 2 },
+  { label: '3 guesses',reward: '10 GOLD', threshold: 3 },
+  { label: '4 guesses',reward: '7 GOLD',  threshold: 4 },
+  { label: '5 guesses',reward: '4 GOLD',  threshold: 5 },
+  { label: '6 guesses',reward: '2 GOLD',  threshold: 6 },
+];
 
 // ── Word list (targets + valid guesses) ──────────────────────────────────────
 const WORDS = [
@@ -97,7 +108,7 @@ const KEY_COLOR  = { correct: '#a8e6cf', present: '#f6c453', absent: '#999' };
 const REWARD_MAP = [20, 15, 10, 7, 4, 2]; // index = guessCount - 1
 
 function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPage }) {
-  const [phase,    setPhase]   = useState('start'); // start | active_found | playing | submitting | result
+  const [phase,    setPhase]   = useState('start'); // start | playing | submitting | result
   const [target,   setTarget]  = useState('');
   const [guesses,  setGuesses] = useState([]);
   const [current,  setCurrent] = useState('');
@@ -106,34 +117,31 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
   const [reward,   setReward]  = useState(0);
   const [txMsg,    setTxMsg]   = useState('');
   const [shake,    setShake]   = useState(false);
+  const [showQuit, setShowQuit]= useState(false);
 
   // Stores win/loss result synchronously so the async submit effect always reads fresh data
   const resultRef     = useRef(null);
   const submitDoneRef = useRef(false);
-
-  // ── Check for leftover active game on mount ──
-  useEffect(() => {
-    if (!contracts || !account) return;
-    contracts.wordGuess.activeGame(account)
-      .then(active => { if (active) setPhase('active_found'); })
-      .catch(() => {});
-  }, [contracts, account]);
 
   // ── Submit to contract once gameOver flips true ──
   useEffect(() => {
     if (!gameOver || !resultRef.current || submitDoneRef.current) return;
     submitDoneRef.current = true;
     const { didWin, guessCount } = resultRef.current;
+    // Loss — no reward, no gas cost; auto-forfeit handles cleanup on next startGame
+    if (!didWin) {
+      setReward(0);
+      setPhase('result');
+      return;
+    }
     const doSubmit = async () => {
       setPhase('submitting');
       setTxMsg('Confirming result on-chain...');
       try {
-        const tx = didWin
-          ? await contracts.wordGuess.submitResult(guessCount)
-          : await contracts.wordGuess.forfeit();
+        const tx = await contracts.wordGuess.submitResult(guessCount);
         await tx.wait();
         await refresh();
-        setReward(didWin ? REWARD_MAP[guessCount - 1] : 0);
+        setReward(REWARD_MAP[guessCount - 1]);
         setTxMsg('');
         setPhase('result');
       } catch (err) {
@@ -191,23 +199,7 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
       setTxMsg(''); setPhase('playing');
     } catch (err) {
       const msg = err.reason || err.shortMessage || err.message || '';
-      if (msg.includes('Active game already in progress')) {
-        setPhase('active_found');
-      } else {
-        setTxMsg('❌ ' + msg.slice(0, 80));
-      }
-    }
-  };
-
-  const handleForfeitExisting = async () => {
-    setTxMsg('Forfeiting...');
-    try {
-      const tx = await contracts.wordGuess.forfeit();
-      await tx.wait();
-      await refresh();
-      setTxMsg(''); setPhase('start');
-    } catch (err) {
-      setTxMsg('❌ ' + (err.reason || err.shortMessage || err.message || 'Failed').slice(0, 80));
+      setTxMsg('❌ ' + msg.slice(0, 80));
     }
   };
 
@@ -235,64 +227,49 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
 
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="page" style={{ maxWidth: 520, paddingTop: 20 }}>
+    <div className="page" style={{ maxWidth: 860, paddingTop: 20 }}>
+      {showQuit && (
+        <QuitModal
+          onConfirm={() => { setShowQuit(false); setPage('home'); }}
+          onCancel={() => setShowQuit(false)}
+        />
+      )}
       <button className="btn-pixel" onClick={() => {
-        if (phase === 'playing' && !gameOver) {
-          if (window.confirm('Quit? Your 1 GOLD entry fee is non-refundable.')) {
-            contracts.wordGuess.forfeit().then(tx => tx.wait()).then(() => { refresh(); setPage('home'); }).catch(() => setPage('home'));
-          }
-        } else { setPage('home'); }
-      }} style={{ marginBottom: 16, fontSize: 12, padding: '8px 14px' }}>
+        if (phase === 'playing' && !gameOver) setShowQuit(true);
+        else setPage('home');
+      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
         ← Back
       </button>
       <h1 className="page-title">📜 Word Quest</h1>
 
-      {/* ── Active game found ── */}
-      {phase === 'active_found' && (
-        <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 11, marginBottom: 12 }}>Unfinished Game Found</h2>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 20 }}>
-            You have an unfinished game. Forfeit it to start a new one.
-          </p>
-          <button className="btn-pixel" onClick={handleForfeitExisting}>Forfeit & Start New</button>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
-        </div>
-      )}
-
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>📜</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 12, marginBottom: 10 }}>Guess the 5-letter word in 6 tries</h2>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>📜</div>
+          <h2>Guess the 5-letter word in 6 tries</h2>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 16 }}>
             {[['🟩','Correct spot'],['🟨','Wrong spot'],['⬜','Not in word']].map(([icon, label]) => (
-              <div key={label} style={{ fontSize: 12, color: 'var(--brown)', textAlign: 'center' }}>
-                <div style={{ fontSize: 22 }}>{icon}</div>
+              <div key={label} style={{ fontSize: 'var(--font-base)', color: 'var(--brown)', textAlign: 'center' }}>
+                <div style={{ fontSize: 28 }}>{icon}</div>
                 <div style={{ marginTop: 4 }}>{label}</div>
               </div>
             ))}
           </div>
-          <div style={{ background: 'var(--cream)', border: '2px solid var(--navy)', borderRadius: 8, padding: '10px 20px', marginBottom: 20, display: 'inline-block' }}>
-            <p style={{ fontFamily: 'var(--pixel-font)', fontSize: 8, lineHeight: 2 }}>
-              1 guess = 20 GOLD &nbsp;|&nbsp; 2 = 15 &nbsp;|&nbsp; 3 = 10<br />
-              4 = 7 GOLD &nbsp;|&nbsp; 5 = 4 &nbsp;|&nbsp; 6 = 2 GOLD
-            </p>
-          </div>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 14, padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
+          {txMsg && <p className="tx-msg">{txMsg}</p>}
         </div>
       )}
 
       {/* ── Game board ── */}
       {(phase === 'playing' || phase === 'submitting') && (
-        <div>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
           {/* 6×5 tile grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'center', marginBottom: 20 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 24 }}>
             {Array.from({ length: 6 }, (_, row) => {
               const guessStr   = row < guesses.length ? guesses[row]
                                : row === guesses.length ? current : '';
@@ -301,7 +278,7 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
               const isActive    = row === guesses.length;
               return (
                 <div key={row} style={{
-                  display: 'flex', gap: 6,
+                  display: 'flex', gap: 10,
                   animation: isActive && shake ? 'wordShake 0.4s ease-in-out' : 'none',
                 }}>
                   {Array.from({ length: 5 }, (_, col) => {
@@ -310,13 +287,13 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
                                  : letter ? 'var(--peach)' : 'var(--white)';
                     return (
                       <div key={col} style={{
-                        width: 52, height: 52,
+                        width: 72, height: 72,
                         background: bg,
                         border: '3px solid var(--navy)',
                         borderRadius: 8,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontFamily: 'var(--pixel-font)',
-                        fontSize: 22,
+                        fontSize: 34,
                         color: 'var(--navy)',
                         boxShadow: letter && !isSubmitted ? '2px 2px 0 var(--navy)' : 'none',
                         transition: 'background 0.25s',
@@ -332,18 +309,18 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
 
           {/* On-screen keyboard */}
           {phase === 'playing' && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 5, alignItems: 'center', marginBottom: 16 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center', marginBottom: 16 }}>
               {KEYBOARD_ROWS.map((row, r) => (
-                <div key={r} style={{ display: 'flex', gap: 4 }}>
+                <div key={r} style={{ display: 'flex', gap: 6 }}>
                   {row.map(key => {
                     const st = letterStatus[key];
                     const bg = st ? KEY_COLOR[st] : 'var(--peach)';
                     return (
                       <button key={key} onClick={() => handleOnScreenKey(key)} style={{
-                        width: key.length > 1 ? 54 : 36, height: 44,
+                        width: key.length > 1 ? 72 : 48, height: 58,
                         background: bg, border: '2px solid var(--navy)', borderRadius: 6,
                         cursor: 'pointer', fontFamily: 'var(--pixel-font)',
-                        fontSize: key.length > 1 ? 7 : 12, color: 'var(--navy)',
+                        fontSize: key.length > 1 ? 14 : 20, color: 'var(--navy)',
                         boxShadow: '2px 2px 0 var(--navy)',
                       }}>
                         {key}
@@ -359,35 +336,39 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
           <div style={{ textAlign: 'center' }}>
             {phase === 'playing' && (
               <button className="btn-pixel" onClick={handleGiveUp}
-                style={{ fontSize: 11, padding: '6px 14px', opacity: 0.65 }}>
+                style={{ fontSize: 'var(--font-sm)', padding: '6px 14px', opacity: 0.65 }}>
                 Give Up
               </button>
             )}
             {(txMsg || phase === 'submitting') && (
-              <p style={{ marginTop: 10, fontSize: 13, color: 'var(--brown)' }}>
+              <p className="game-status" style={{ marginTop: 10 }}>
                 {txMsg || '⏳ Confirming on-chain...'}
               </p>
             )}
           </div>
+          </div>{/* closes flex:1 inner div */}
+          <RewardPanel
+            tiers={WG_REWARDS}
+            current={guesses.length > 0 ? guesses.length : undefined}
+            higherIsBetter={false}
+          />
         </div>
       )}
 
       {/* ── Result screen ── */}
       {phase === 'result' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>{won ? '🏆' : '😔'}</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 13, marginBottom: 12 }}>
-            {won ? 'You Won!' : 'Game Over'}
-          </h2>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>{won ? '🏆' : '😔'}</div>
+          <h2>{won ? 'You Won!' : 'Game Over'}</h2>
           {won
-            ? <p style={{ fontSize: 16, color: 'var(--gold-dark)', fontWeight: 'bold', marginBottom: 8 }}>+{reward} GOLD earned!</p>
-            : <p style={{ fontSize: 15, color: 'var(--brown)', marginBottom: 8 }}>The word was: <strong style={{ fontFamily: 'var(--pixel-font)', letterSpacing: 3 }}>{target}</strong></p>
+            ? <p className="reward-text">+{reward} GOLD earned!</p>
+            : <p>The word was: <strong style={{ fontFamily: 'var(--pixel-font)', letterSpacing: 3 }}>{target}</strong></p>
           }
-          <p style={{ fontSize: 13, color: 'var(--brown)', marginBottom: 4 }}>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
-          {txMsg && <p style={{ fontSize: 12, color: '#c00', marginBottom: 8 }}>{txMsg}</p>}
+          <p>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
+          {txMsg && <p className="tx-error">{txMsg}</p>}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
-            <button className="btn-pixel green" onClick={playAgain}>Play Again</button>
-            <button className="btn-pixel" onClick={() => setPage('home')}>Home</button>
+            <button className="btn-pixel green large" onClick={playAgain}>Play Again</button>
+            <button className="btn-pixel large" onClick={() => setPage('home')}>Home</button>
           </div>
         </div>
       )}

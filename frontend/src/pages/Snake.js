@@ -4,6 +4,15 @@
 // Milestones: 10=2 GOLD, 25=5, 50=10, 100=25 GOLD
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import QuitModal from '../components/QuitModal';
+import RewardPanel from '../components/RewardPanel';
+
+const SNAKE_REWARDS = [
+  { label: '10 apples', reward: '2 GOLD',  threshold: 10  },
+  { label: '25 apples', reward: '5 GOLD',  threshold: 25  },
+  { label: '50 apples', reward: '10 GOLD', threshold: 50  },
+  { label: '100 apples',reward: '25 GOLD', threshold: 100 },
+];
 
 const GRID   = 20;         // cells in each direction
 const CELL   = 20;         // pixels per cell
@@ -30,18 +39,11 @@ function getReward(apples) {
 }
 
 function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }) {
-  const [phase,  setPhase]  = useState('start');
-  const [apples, setApples] = useState(0);
-  const [reward, setReward] = useState(0);
-  const [txMsg,  setTxMsg]  = useState('');
-
-  // ── Detect leftover active game from a previous session ──────────────────
-  useEffect(() => {
-    if (!contracts || !account) return;
-    contracts.snake.activeGame(account)
-      .then(active => { if (active) setPhase('active_found'); })
-      .catch(() => {});
-  }, [contracts, account]);
+  const [phase,     setPhase]    = useState('start');
+  const [apples,    setApples]   = useState(0);
+  const [reward,    setReward]   = useState(0);
+  const [txMsg,     setTxMsg]    = useState('');
+  const [showQuit,  setShowQuit] = useState(false);
 
   const canvasRef = useRef(null);
 
@@ -195,7 +197,12 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
       ctx.font = '16px monospace';
       ctx.fillText(`Apples: ${applesRef.current}`, W / 2, H / 2 + 16);
     }
-    // Submit result
+    // Only submit on-chain if the player earned a reward — losses cost no gas
+    if (applesRef.current < 10) {
+      setReward(0);
+      setPhase('result');
+      return;
+    }
     const doSubmit = async () => {
       setTxMsg('Submitting result on-chain...');
       try {
@@ -237,11 +244,7 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
       frameRef.current = requestAnimationFrame(loop);
     } catch (err) {
       const msg = err.reason || err.shortMessage || err.message || '';
-      if (msg.includes('Active game already in progress')) {
-        setPhase('active_found'); // jump straight to the forfeit screen
-      } else {
-        setTxMsg('❌ ' + msg.slice(0, 80));
-      }
+      setTxMsg('❌ ' + msg.slice(0, 80));
     }
   };
 
@@ -254,119 +257,88 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="page" style={{ maxWidth: 560, paddingTop: 20 }}>
-      <button className="btn-pixel" onClick={() => {
-        if (phase === 'playing') {
-          if (window.confirm('Quit? Your 1 GOLD entry fee is non-refundable.')) {
+    <div className="page" style={{ maxWidth: 860, paddingTop: 20 }}>
+      {showQuit && (
+        <QuitModal
+          onConfirm={() => {
             activeRef.current = false;
             if (frameRef.current) cancelAnimationFrame(frameRef.current);
-            contracts.snake.forfeit().then(tx => tx.wait()).then(() => { refresh(); setPage('home'); }).catch(() => setPage('home'));
-          }
-        } else { setPage('home'); }
-      }} style={{ marginBottom: 16, fontSize: 12, padding: '8px 14px' }}>
+            setShowQuit(false);
+            setPage('home');
+          }}
+          onCancel={() => setShowQuit(false)}
+        />
+      )}
+      <button className="btn-pixel" onClick={() => {
+        if (phase === 'playing') setShowQuit(true);
+        else setPage('home');
+      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
         ← Back
       </button>
       <h1 className="page-title">🐍 Snake Harvest</h1>
 
-      {/* ── Leftover active game ── */}
-      {phase === 'active_found' && (
-        <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 11, marginBottom: 12 }}>Unfinished Game Found</h2>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 20 }}>
-            You left a Snake game in progress. Forfeit it to start a new one (entry fee already spent).
-          </p>
-          <button className="btn-pixel" onClick={async () => {
-            setTxMsg('Forfeiting...');
-            try {
-              const tx = await contracts.snake.forfeit();
-              await tx.wait();
-              await refresh();
-              setTxMsg('');
-              setPhase('start');
-            } catch (err) {
-              setTxMsg('❌ ' + (err.reason || err.shortMessage || err.message || 'Failed').slice(0, 80));
-            }
-          }}>
-            Forfeit &amp; Start New
-          </button>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
-        </div>
-      )}
-
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>🐍</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 12, marginBottom: 10 }}>Eat apples, grow longer!</h2>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 8 }}>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>🐍</div>
+          <h2>Eat apples, grow longer!</h2>
+          <p>
             Use arrow keys (or WASD) to control the snake.
             Hit a wall or yourself = game over.
           </p>
-          <div style={{ background: 'var(--cream)', border: '2px solid var(--navy)', borderRadius: 8, padding: '10px 20px', marginBottom: 20, display: 'inline-block' }}>
-            <p style={{ fontFamily: 'var(--pixel-font)', fontSize: 8, lineHeight: 2 }}>
-              10 apples = 2 GOLD &nbsp;|&nbsp; 25 = 5<br />
-              50 apples = 10 GOLD &nbsp;|&nbsp; 100 = 25 GOLD
-            </p>
-          </div>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 14, padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
+          {txMsg && <p className="tx-msg">{txMsg}</p>}
         </div>
       )}
 
       {/* ── Canvas (shown while playing or on game over) ── */}
       {(phase === 'playing' || phase === 'gameover' || phase === 'submitting') && (
-        <div>
-          {/* HUD */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10, padding: '0 4px' }}>
-            <span style={{ fontFamily: 'var(--pixel-font)', fontSize: 11 }}>🍎 Apples: {apples}</span>
-            <span style={{ fontFamily: 'var(--pixel-font)', fontSize: 11, color: 'var(--gold-dark)' }}>
-              Reward: {getReward(apples) > 0 ? `${getReward(apples)} GOLD` : '—'}
-            </span>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+          {/* Game canvas + HUD */}
+          <div style={{ flex: 1 }}>
+            <div className="game-hud">
+              <span>🍎 Apples: {apples}</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <canvas
+                ref={canvasRef}
+                width={W}
+                height={H}
+                style={{
+                  border: 'var(--border)',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow)',
+                  display: 'block',
+                  imageRendering: 'pixelated',
+                }}
+              />
+            </div>
+            <p className="game-status">Arrow keys or WASD to move</p>
+            {(txMsg || phase === 'submitting') && (
+              <p className="game-status">{txMsg || '⏳ Confirming on-chain...'}</p>
+            )}
           </div>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <canvas
-              ref={canvasRef}
-              width={W}
-              height={H}
-              style={{
-                border: 'var(--border)',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow)',
-                display: 'block',
-                imageRendering: 'pixelated',
-              }}
-            />
-          </div>
-          <p style={{ textAlign: 'center', marginTop: 10, fontSize: 12, color: 'var(--brown)' }}>
-            Arrow keys or WASD to move
-          </p>
-          {(txMsg || phase === 'submitting') && (
-            <p style={{ textAlign: 'center', marginTop: 8, fontSize: 13, color: 'var(--brown)' }}>
-              {txMsg || '⏳ Confirming on-chain...'}
-            </p>
-          )}
+          {/* Rewards sidebar */}
+          <RewardPanel tiers={SNAKE_REWARDS} current={apples} higherIsBetter={true} />
         </div>
       )}
 
       {/* ── Result screen ── */}
       {phase === 'result' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>{reward > 0 ? '🏆' : '🍎'}</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 13, marginBottom: 12 }}>Game Over!</h2>
-          <p style={{ fontSize: 15, color: 'var(--brown)', marginBottom: 8 }}>
-            You ate <strong>{apples}</strong> apple{apples !== 1 ? 's' : ''}
-          </p>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>{reward > 0 ? '🏆' : '🍎'}</div>
+          <h2>Game Over!</h2>
+          <p>You ate <strong>{apples}</strong> apple{apples !== 1 ? 's' : ''}</p>
           {reward > 0
-            ? <p style={{ fontSize: 16, color: 'var(--gold-dark)', fontWeight: 'bold', marginBottom: 8 }}>+{reward} GOLD earned!</p>
-            : <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 8 }}>Eat 10+ apples to earn GOLD!</p>
+            ? <p className="reward-text">+{reward} GOLD earned!</p>
+            : <p>Eat 10+ apples to earn GOLD!</p>
           }
-          <p style={{ fontSize: 13, color: 'var(--brown)', marginBottom: 4 }}>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
-          {txMsg && <p style={{ fontSize: 12, color: '#c00', marginBottom: 8 }}>{txMsg}</p>}
+          <p>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
+          {txMsg && <p className="tx-error">{txMsg}</p>}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
             <button className="btn-pixel green" onClick={playAgain}>Play Again</button>
             <button className="btn-pixel" onClick={() => setPage('home')}>Home</button>

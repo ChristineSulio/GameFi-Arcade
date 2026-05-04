@@ -81,8 +81,8 @@ contract PlayerNFT is ERC721, Ownable {
 
         // Checks recipient can handle ERC721 tokens (prevents tokens getting stuck)
         _safeMint(msg.sender, tokenId);
-        // Send welcome bonus (10 GOLD) to new minted player NFT
-        goldToken.transferFromTreasury(msg.sender, WELCOME_BONUS);
+        // Send welcome bonus (10 GOLD) — uses separate function that skips the daily earn cap
+        goldToken.transferWelcomeBonus(msg.sender, WELCOME_BONUS);
 
         emit PlayerMinted(msg.sender, tokenId);
     }

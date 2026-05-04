@@ -27,7 +27,9 @@ abstract contract Game {
 
     function startGame() external virtual {
         require(playerNFT.hasMinted(msg.sender), "Must have a Player NFT to play");
-        require(!activeGame[msg.sender], "Active game already in progress");
+        if (activeGame[msg.sender]) {
+            emit GameForfeited(msg.sender);
+        }
         activeGame[msg.sender] = true;
         goldToken.deductEntryFee(msg.sender);
         emit GameStarted(msg.sender);

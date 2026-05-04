@@ -4,6 +4,16 @@
 // Fewer attempts = higher reward: ≤10=20, ≤14=15, ≤18=10, ≤24=5, ≤32=2 GOLD
 
 import { useState, useEffect, useRef } from 'react';
+import QuitModal from '../components/QuitModal';
+import RewardPanel from '../components/RewardPanel';
+
+const MM_REWARDS = [
+  { label: '≤10 attempts', reward: '20 GOLD', threshold: 10 },
+  { label: '≤14 attempts', reward: '15 GOLD', threshold: 14 },
+  { label: '≤18 attempts', reward: '10 GOLD', threshold: 18 },
+  { label: '≤24 attempts', reward: '5 GOLD',  threshold: 24 },
+  { label: '≤32 attempts', reward: '2 GOLD',  threshold: 32 },
+];
 
 const EMOJIS = ['🌿', '🌸', '🍄', '🦋', '🌻', '🍀', '🌈', '⭐'];
 
@@ -30,26 +40,17 @@ function getReward(attempts) {
 function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, setPage }) {
   const [phase,    setPhase]   = useState('start');
   const [cards,    setCards]   = useState([]);
-  const [flipped,  setFlipped] = useState([]);   // indices of face-up unmatched cards
+  const [flipped,  setFlipped] = useState([]);
   const [attempts, setAttempts]= useState(0);
   const [matched,  setMatched] = useState(0);
   const [locked,   setLocked]  = useState(false);
   const [reward,   setReward]  = useState(0);
   const [txMsg,    setTxMsg]   = useState('');
+  const [showQuit, setShowQuit]= useState(false);
 
-  // Use a ref for attempts so the async submit always reads the final value
   const attemptsRef = useRef(0);
 
-  // ── Check for leftover active game ──
-  const [activeFound, setActiveFound] = useState(false);
-  useEffect(() => {
-    if (!contracts || !account) return;
-    contracts.memoryMatch.activeGame(account)
-      .then(a => { if (a) setActiveFound(true); })
-      .catch(() => {});
-  }, [contracts, account]);
-
-  // ── Start game ──────────────────────────────────────────────────────────────
+  // ── Start game ──
   const handleStart = async () => {
     setTxMsg('Paying 1 GOLD entry fee...');
     try {
@@ -60,38 +61,18 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
       setFlipped([]); setAttempts(0); setMatched(0); setLocked(false);
       setTxMsg(''); setPhase('playing');
     } catch (err) {
-      const msg = err.reason || err.shortMessage || err.message || '';
-      if (msg.includes('Active game already in progress')) {
-        setActiveFound(true); setPhase('start'); // MemoryMatch uses activeFound flag
-      } else {
-        setTxMsg('❌ ' + msg.slice(0, 80));
-      }
+      setTxMsg('❌ ' + (err.reason || err.shortMessage || err.message || '').slice(0, 80));
     }
   };
 
-  // ── Forfeit leftover game ──
-  const handleForfeitExisting = async () => {
-    setTxMsg('Forfeiting...');
-    try {
-      const tx = await contracts.memoryMatch.forfeit();
-      await tx.wait();
-      await refresh();
-      setActiveFound(false); setTxMsg('');
-    } catch (err) {
-      setTxMsg('❌ ' + (err.reason || err.shortMessage || err.message || 'Failed').slice(0, 80));
-    }
-  };
-
-  // ── Card flip logic ─────────────────────────────────────────────────────────
+  // ── Card flip logic ──
   const handleCardClick = (idx) => {
     if (locked || cards[idx].flipped || cards[idx].matched) return;
 
-    // Flip this card
     const newCards = cards.map((c, i) => i === idx ? { ...c, flipped: true } : c);
     const newFlipped = [...flipped, idx];
 
     if (newFlipped.length === 2) {
-      // Second card flipped — increment attempt, check for match
       attemptsRef.current += 1;
       const newAttempts = attemptsRef.current;
       setAttempts(newAttempts);
@@ -99,7 +80,6 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
 
       const [i1, i2] = newFlipped;
       if (newCards[i1].emoji === newCards[i2].emoji) {
-        // Match!
         newCards[i1] = { ...newCards[i1], matched: true };
         newCards[i2] = { ...newCards[i2], matched: true };
         const newMatched = matched + 1;
@@ -107,13 +87,8 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
         setFlipped([]);
         setLocked(false);
         setMatched(newMatched);
-
-        if (newMatched === 8) {
-          // All pairs matched — submit result
-          submitResult(newAttempts);
-        }
+        if (newMatched === 8) submitResult(newAttempts);
       } else {
-        // No match — show for 900ms then flip back
         setCards(newCards);
         setFlipped(newFlipped);
         setTimeout(() => {
@@ -125,13 +100,12 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
         }, 900);
       }
     } else {
-      // First card flipped
       setCards(newCards);
       setFlipped(newFlipped);
     }
   };
 
-  // ── Submit result to contract ──────────────────────────────────────────────
+  // ── Submit result ──
   const submitResult = async (finalAttempts) => {
     setPhase('submitting');
     setTxMsg('Submitting result on-chain...');
@@ -155,66 +129,46 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
     attemptsRef.current = 0;
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="page" style={{ maxWidth: 560, paddingTop: 20 }}>
+    <div className="page" style={{ maxWidth: 860, paddingTop: 20 }}>
+      {showQuit && (
+        <QuitModal
+          onConfirm={() => { setShowQuit(false); setPage('home'); }}
+          onCancel={() => setShowQuit(false)}
+        />
+      )}
       <button className="btn-pixel" onClick={() => {
-        if (phase === 'playing') {
-          if (window.confirm('Quit? Your 1 GOLD entry fee is non-refundable.')) {
-            contracts.memoryMatch.forfeit().then(tx => tx.wait()).then(() => { refresh(); setPage('home'); }).catch(() => setPage('home'));
-          }
-        } else { setPage('home'); }
-      }} style={{ marginBottom: 16, fontSize: 12, padding: '8px 14px' }}>
+        if (phase === 'playing') setShowQuit(true);
+        else setPage('home');
+      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
         ← Back
       </button>
       <h1 className="page-title">🧠 Mind Match</h1>
 
-      {/* ── Leftover active game ── */}
-      {activeFound && phase === 'start' && (
-        <div className="card" style={{ textAlign: 'center', marginBottom: 20 }}>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 12 }}>⚠️ Unfinished game found. Forfeit to start fresh.</p>
-          <button className="btn-pixel" onClick={handleForfeitExisting}>Forfeit &amp; Start New</button>
-          {txMsg && <p style={{ marginTop: 10, fontSize: 13 }}>{txMsg}</p>}
-        </div>
-      )}
-
       {/* ── Start screen ── */}
-      {phase === 'start' && !activeFound && (
+      {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>🧠</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 12, marginBottom: 10 }}>Match all 8 pairs to win!</h2>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 16 }}>
-            Flip two cards at a time. Find matching emojis!
-          </p>
-          <div style={{ background: 'var(--cream)', border: '2px solid var(--navy)', borderRadius: 8, padding: '10px 20px', marginBottom: 20, display: 'inline-block' }}>
-            <p style={{ fontFamily: 'var(--pixel-font)', fontSize: 8, lineHeight: 2 }}>
-              ≤10 attempts = 20 GOLD &nbsp;|&nbsp; ≤14 = 15<br />
-              ≤18 = 10 GOLD &nbsp;|&nbsp; ≤24 = 5 &nbsp;|&nbsp; ≤32 = 2 GOLD
-            </p>
-          </div>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>🧠</div>
+          <h2>Match all 8 pairs to win!</h2>
+          <p style={{ marginBottom: 16 }}>Flip two cards at a time. Find matching emojis!</p>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 14, padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
+          {txMsg && <p className="tx-msg">{txMsg}</p>}
         </div>
       )}
 
       {/* ── Game board ── */}
       {(phase === 'playing' || phase === 'submitting') && (
-        <div>
-          {/* Attempt counter */}
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 16, padding: '0 4px' }}>
-            <span style={{ fontFamily: 'var(--pixel-font)', fontSize: 11 }}>
-              Attempts: {attempts}
-            </span>
-            <span style={{ fontFamily: 'var(--pixel-font)', fontSize: 11 }}>
-              Pairs: {matched}/8
-            </span>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+          <div className="game-hud">
+            <span>Attempts: {attempts}</span>
+            <span>Pairs: {matched}/8</span>
           </div>
 
-          {/* 4×4 card grid */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 10 }}>
             {cards.map((card, idx) => (
               <div
@@ -222,11 +176,7 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
                 onClick={() => phase === 'playing' && handleCardClick(idx)}
                 style={{
                   aspectRatio: '1',
-                  background: card.matched
-                    ? 'var(--mint)'
-                    : card.flipped
-                    ? 'var(--peach)'
-                    : 'var(--navy)',
+                  background: card.matched ? 'var(--mint)' : card.flipped ? 'var(--peach)' : 'var(--navy)',
                   border: '3px solid var(--navy)',
                   borderRadius: 12,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -244,32 +194,28 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
           </div>
 
           {(txMsg || phase === 'submitting') && (
-            <p style={{ textAlign: 'center', marginTop: 16, fontSize: 13, color: 'var(--brown)' }}>
-              {txMsg || '⏳ Confirming on-chain...'}
-            </p>
+            <p className="game-status">{txMsg || '⏳ Confirming on-chain...'}</p>
           )}
+          </div>
+          <RewardPanel tiers={MM_REWARDS} current={attempts} higherIsBetter={false} />
         </div>
       )}
 
       {/* ── Result screen ── */}
       {phase === 'result' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>🏆</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 13, marginBottom: 12 }}>
-            You matched them all!
-          </h2>
-          <p style={{ fontSize: 15, color: 'var(--brown)', marginBottom: 8 }}>
-            Completed in <strong>{attempts}</strong> attempts
-          </p>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>🏆</div>
+          <h2>You matched them all!</h2>
+          <p>Completed in <strong>{attempts}</strong> attempts</p>
           {reward > 0
-            ? <p style={{ fontSize: 16, color: 'var(--gold-dark)', fontWeight: 'bold', marginBottom: 8 }}>+{reward} GOLD earned!</p>
-            : <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 8 }}>No reward (over 32 attempts)</p>
+            ? <p className="reward-text">+{reward} GOLD earned!</p>
+            : <p>No reward (over 32 attempts)</p>
           }
-          <p style={{ fontSize: 13, color: 'var(--brown)', marginBottom: 4 }}>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
-          {txMsg && <p style={{ fontSize: 12, color: '#c00', marginBottom: 8 }}>{txMsg}</p>}
+          <p>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
+          {txMsg && <p className="tx-error">{txMsg}</p>}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
-            <button className="btn-pixel green" onClick={playAgain}>Play Again</button>
-            <button className="btn-pixel" onClick={() => setPage('home')}>Home</button>
+            <button className="btn-pixel green large" onClick={playAgain}>Play Again</button>
+            <button className="btn-pixel large" onClick={() => setPage('home')}>Home</button>
           </div>
         </div>
       )}

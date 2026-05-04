@@ -1,16 +1,10 @@
 /* ============================================================
    App.css — Pixel Grove Global Styles
    Color palette: cream, mint, peach, lavender, gold, navy
-   Font: Press Start 2P (pixel), system font for body text
+   Font: Jersey 10 (pixel), system font for body text
    ============================================================ */
 
 @import url("https://fonts.googleapis.com/css2?family=Jersey+10&display=swap");
-
-/* Load the Sprout Lands pixel font from local assets */
-@font-face {
-  font-family: "SproutLands";
-  src: url("./assets/pixelFont-7-8x14-sproutLands.ttf") format("truetype");
-}
 
 /* ── CSS Variables ────────────────────────────────────────── */
 :root {
@@ -27,12 +21,19 @@
   --sky:        #c8ecf8;
   --grass:      #7ec87e;
 
-  --pixel-font: "SproutLands", "Jersey 10", monospace;
+  --pixel-font: "Jersey 10", monospace;
   --body-font:  "Jersey 10", monospace;
 
   --border: 3px solid var(--navy);
   --shadow: 4px 4px 0px var(--navy);
   --radius: 12px;
+
+  /* ── Font scale — change here to update the whole app ── */
+  --font-sm:   18px;   /* reward tables, small labels            */
+  --font-base: 26px;   /* body text, descriptions, balance lines */
+  --font-lg:   32px;   /* section headings (pixel font)          */
+  --font-xl:   38px;   /* reward/highlight callouts              */
+  --font-2xl:  44px;   /* large tile letters, etc.               */
 }
 
 /* ── Reset ────────────────────────────────────────────────── */
@@ -47,7 +48,7 @@ body {
   font-family: var(--body-font);
   color: var(--navy);
   min-height: 100vh;
-  font-size: 18px;
+  font-size: 24px;
 }
 
 /* ── Header ───────────────────────────────────────────────── */
@@ -72,7 +73,7 @@ body {
 
 .header-logo span {
   font-family: var(--pixel-font);
-  font-size: 14px;
+  font-size: 30px;
   color: var(--navy);
   line-height: 1.4;
 }
@@ -93,8 +94,7 @@ body {
 
 .nav-btn {
   font-family: var(--body-font);
-  font-size: 14px;
-  /* font-weight: 600; */
+  font-size: 20px;
   background: none;
   border: 2px solid transparent;
   border-radius: var(--radius);
@@ -128,20 +128,20 @@ body {
   border-radius: var(--radius);
   padding: 6px 12px;
   font-family: var(--pixel-font);
-  font-size: 9px;
+  font-size: 20px;
   color: var(--navy);
   box-shadow: var(--shadow);
 }
 
 .wallet-address {
-  font-size: 12px;
+  font-size: 16px;
   color: var(--brown);
   font-family: monospace;
 }
 
 .btn-connect {
   font-family: var(--pixel-font);
-  font-size: 9px;
+  font-size: 20px;
   background-color: var(--mint);
   border: var(--border);
   border-radius: var(--radius);
@@ -171,7 +171,7 @@ body {
 
 .page-title {
   font-family: var(--pixel-font);
-  font-size: 16px;
+  font-size: 32px;
   color: var(--navy);
   margin-bottom: 24px;
 }
@@ -185,10 +185,78 @@ body {
   padding: 20px;
 }
 
+/* Default text sizes inside cards — game pages inherit these automatically */
+.card p {
+  font-size: var(--font-base);
+  color: var(--brown);
+  margin-bottom: 8px;
+}
+
+.card h2 {
+  font-family: var(--pixel-font);
+  font-size: var(--font-lg);
+  color: var(--navy);
+  margin-bottom: 12px;
+}
+
+.card .reward-text {
+  font-size: var(--font-xl);
+  color: var(--gold-dark);
+  font-weight: bold;
+  margin-bottom: 8px;
+}
+
+.card .tx-msg {
+  font-size: var(--font-base);
+  color: var(--brown);
+  margin-top: 8px;
+}
+
+.card .tx-error {
+  font-size: var(--font-base);
+  color: #c00;
+  margin-bottom: 8px;
+}
+
+/* Reward table inside start-screen cards */
+.reward-table {
+  background: var(--cream);
+  border: 2px solid var(--navy);
+  border-radius: 8px;
+  padding: 12px 24px;
+  margin-bottom: 20px;
+  display: inline-block;
+}
+
+.reward-table p {
+  font-family: var(--pixel-font);
+  font-size: var(--font-sm) !important;
+  line-height: 2;
+  color: var(--navy) !important;
+}
+
+/* HUD bar above canvas games */
+.game-hud {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  padding: 0 4px;
+  font-family: var(--pixel-font);
+  font-size: var(--font-base);
+}
+
+/* Status/submitting messages below canvas */
+.game-status {
+  text-align: center;
+  margin-top: 8px;
+  font-size: var(--font-base);
+  color: var(--brown);
+}
+
 /* ── Pixel Button (primary action) ───────────────────────── */
 .btn-pixel {
   font-family: var(--pixel-font);
-  font-size: 9px;
+  font-size: 14px;
   background-color: var(--peach);
   border: var(--border);
   border-radius: var(--radius);
@@ -227,13 +295,19 @@ body {
   background-color: var(--gold);
 }
 
+/* Large result/modal buttons — matches the QuitModal button size */
+.btn-pixel.large {
+  font-size: var(--font-base);
+  padding: 14px 28px;
+}
+
 /* ── Error / Status Messages ──────────────────────────────── */
 .error-msg {
   background-color: #ffd3d3;
   border: var(--border);
   border-radius: var(--radius);
   padding: 10px 16px;
-  font-size: 13px;
+  font-size: 18px;
   color: #8b0000;
   margin-top: 12px;
 }
@@ -243,7 +317,7 @@ body {
   border: var(--border);
   border-radius: var(--radius);
   padding: 10px 16px;
-  font-size: 13px;
+  font-size: 18px;
   color: var(--navy);
   margin-top: 12px;
 }
@@ -256,7 +330,7 @@ body {
   margin-top: 24px;
 }
 
-/* Card is split into colored top + white bottom, like the reference */
+/* Card is split into colored top + white bottom */
 .game-card {
   background-color: var(--white);
   border: var(--border);
@@ -296,30 +370,30 @@ body {
 }
 
 .game-card-icon {
-  font-size: 52px;
+  font-size: 64px;
   image-rendering: pixelated;
 }
 
 .game-card-name {
   font-family: var(--pixel-font);
-  font-size: 15px;
+  font-size: 20px;
   color: var(--navy);
   line-height: 1.5;
 }
 
 .game-card-desc {
-  font-size: 13px;
+  font-size: 18px;
   color: var(--brown);
 }
 
 .game-card-reward {
-  font-size: 14px;
+  font-size: 18px;
   color: var(--brown);
 }
 
 .game-card-reward span {
   color: var(--gold-dark);
-  font-weight: bold;
+  /* font-weight: bold; */
 }
 
 /* ── Leaderboard Table ────────────────────────────────────── */
@@ -331,7 +405,7 @@ body {
 
 .leaderboard-table th {
   font-family: var(--pixel-font);
-  font-size: 8px;
+  font-size: 14px;
   padding: 12px;
   background-color: var(--mint);
   border: var(--border);
@@ -341,7 +415,7 @@ body {
 .leaderboard-table td {
   padding: 12px;
   border: 2px solid var(--navy);
-  font-size: 13px;
+  font-size: 18px;
   background-color: var(--white);
 }
 
@@ -366,14 +440,14 @@ body {
 }
 
 .stat-box-label {
-  font-size: 11px;
+  font-size: 16px;
   color: var(--brown);
   margin-bottom: 8px;
 }
 
 .stat-box-value {
   font-family: var(--pixel-font);
-  font-size: 14px;
+  font-size: 20px;
   color: var(--navy);
 }
 
@@ -389,7 +463,7 @@ body {
 }
 
 .no-nft-banner p {
-  font-size: 14px;
+  font-size: 20px;
   margin-bottom: 16px;
   color: var(--navy);
 }
@@ -397,7 +471,7 @@ body {
 /* ── Loading Spinner ──────────────────────────────────────── */
 .loading {
   font-family: var(--pixel-font);
-  font-size: 10px;
+  font-size: 16px;
   color: var(--brown);
   padding: 32px;
   text-align: center;
@@ -411,7 +485,6 @@ body {
   justify-content: space-between;
   gap: 32px;
   padding: 48px 64px 0 64px;
-  /* Sky gradient top → grass green bottom */
   background: linear-gradient(180deg, #c8ecf8 0%, #d8f0c0 55%, #8fc96c 100%);
   border-bottom: var(--border);
   overflow: hidden;
@@ -438,11 +511,18 @@ body {
   position: absolute;
   bottom: 0;
   left: 50%;
-  transform: translateX(-50%);
-  height: 220px;
   image-rendering: pixelated;
   z-index: 0;
   opacity: 0.85;
+  height: 340px;
+  animation: heroFloat 5s ease-in-out infinite;
+  transform-origin: bottom center;
+}
+
+@keyframes heroFloat {
+  0%   { transform: translateX(-50%) translateY(0px); }
+  50%  { transform: translateX(-50%) translateY(-8px); }
+  100% { transform: translateX(-50%) translateY(0px); }
 }
 
 .hero-left {
@@ -454,7 +534,7 @@ body {
 
 .hero-title {
   font-family: var(--pixel-font);
-  font-size: 36px;
+  font-size: 48px;
   line-height: 1.5;
   color: var(--navy);
   margin-bottom: 16px;
@@ -462,7 +542,7 @@ body {
 }
 
 .hero-sub {
-  font-size: 18px;
+  font-size: 22px;
   color: var(--brown-dark);
   margin-bottom: 28px;
   line-height: 1.7;
@@ -503,6 +583,6 @@ body {
 .stat-chip.mint  { background-color: var(--mint); }
 .stat-chip.peach { background-color: var(--peach); }
 
-.stat-chip-icon  { font-size: 20px; }
-.stat-chip-value { font-family: var(--pixel-font); font-size: 16px; margin: 4px 0; }
-.stat-chip-label { font-size: 13px; color: var(--brown); }
+.stat-chip-icon  { font-size: 26px; }
+.stat-chip-value { font-family: var(--pixel-font); font-size: 20px; margin: 4px 0; }
+.stat-chip-label { font-size: 18px; color: var(--brown); }

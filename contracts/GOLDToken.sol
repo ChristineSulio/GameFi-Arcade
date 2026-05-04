@@ -69,6 +69,13 @@ contract GOLDToken is ERC20, Ownable {
         _;
     }
 
+    // Called by PlayerNFT to pay the one-time welcome bonus (does NOT count toward daily cap)
+    function transferWelcomeBonus(address to, uint256 amount) external onlyAuthorized {
+        require(balanceOf(address(this)) >= amount, "Not enough balance in treasury");
+        _transfer(address(this), to, amount);
+        emit TreasuryTransferred(to, amount);
+    }
+
     // Called by game contracts to pay rewards
     function transferFromTreasury(address to, uint256 amount) external onlyAuthorized {
         // Reset daily earning cap if more than 24 hours have passed and update reset time

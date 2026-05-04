@@ -26,6 +26,8 @@ function App() {
     hasNFT,
     goldBalance,
     stats,
+    dailyEarned,
+    lastDailyClaim,
     loading,
     refresh,
     mintNFT,
@@ -40,12 +42,14 @@ function App() {
     hasNFT,
     goldBalance,
     stats,
+    dailyEarned,
+    lastDailyClaim,
     loading,
     refresh,
     mintNFT,
     claimFaucet,
     formatGold,
-    connect, // needed for Home hero Connect Wallet button
+    connect,
   };
 
   return (
@@ -58,7 +62,7 @@ function App() {
           onClick={() => setPage("home")}
           style={{ cursor: "pointer" }}
         >
-          <span>🌿</span>
+          <img src="/assets/logo.png" alt="Pixel Grove" style={{ height: 48, imageRendering: 'pixelated' }} />
           <span>
             <span className="logo-pixel">PIXEL </span>
             <span className="logo-grove">GROVE</span>

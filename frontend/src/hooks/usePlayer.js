@@ -10,6 +10,8 @@ export function usePlayer(contracts, account) {
   const [hasNFT, setHasNFT] = useState(false);
   const [goldBalance, setGoldBalance] = useState(0n); // BigInt in wei
   const [stats, setStats] = useState(null); // { name, level, totalWins, lifetimeEarned }
+  const [dailyEarned, setDailyEarned] = useState(0n);       // GOLD earned today (BigInt wei)
+  const [lastDailyClaim, setLastDailyClaim] = useState(0n); // Unix timestamp of last faucet claim
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -21,13 +23,17 @@ export function usePlayer(contracts, account) {
     try {
       const _hasNFT = await contracts.playerNFT.hasMinted(account);
       const _balance = await contracts.goldToken.balanceOf(account);
+      const _dailyEarned = await contracts.goldToken.dailyEarned(account);
+      const _lastDailyClaim = await contracts.goldToken.lastDailyClaim(account);
       setHasNFT(_hasNFT);
-      setGoldBalance(_balance); // keep as BigInt for ethers.formatEther later
+      setGoldBalance(_balance);
+      setDailyEarned(_dailyEarned);
+      setLastDailyClaim(_lastDailyClaim);
 
       if (_hasNFT) {
         const [name, level, totalWins, lifetimeEarned] =
           await contracts.playerNFT.getStats(account);
-        setStats({ name, level, totalWins, lifetimeEarned }); // keep as BigInt
+        setStats({ name, level, totalWins, lifetimeEarned });
       } else {
         setStats(null);
       }
@@ -87,6 +93,8 @@ export function usePlayer(contracts, account) {
     hasNFT,
     goldBalance,
     stats,
+    dailyEarned,
+    lastDailyClaim,
     loading,
     error,
     refresh,

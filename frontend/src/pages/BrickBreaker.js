@@ -4,6 +4,14 @@
 // Milestones: 1000=2 GOLD, 5000=7, 10000=15 GOLD
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import QuitModal from '../components/QuitModal';
+import RewardPanel from '../components/RewardPanel';
+
+const BRICK_REWARDS = [
+  { label: '1,000 pts',  reward: '2 GOLD',  threshold: 1000  },
+  { label: '5,000 pts',  reward: '7 GOLD',  threshold: 5000  },
+  { label: '10,000 pts', reward: '15 GOLD', threshold: 10000 },
+];
 
 // ── Canvas dimensions ─────────────────────────────────────────────────────────
 const CW = 480;   // canvas width
@@ -43,16 +51,9 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
   const [phase,  setPhase]  = useState('start');
   const [score,  setScore]  = useState(0);
   const [lives,  setLives]  = useState(3);
-  const [reward, setReward] = useState(0);
-  const [txMsg,  setTxMsg]  = useState('');
-
-  // ── Detect leftover active game from a previous session ──────────────────
-  useEffect(() => {
-    if (!contracts || !account) return;
-    contracts.brickBreaker.activeGame(account)
-      .then(active => { if (active) setPhase('active_found'); })
-      .catch(() => {});
-  }, [contracts, account]);
+  const [reward,   setReward]  = useState(0);
+  const [txMsg,    setTxMsg]   = useState('');
+  const [showQuit, setShowQuit]= useState(false);
 
   const canvasRef  = useRef(null);
   const frameRef   = useRef(null);
@@ -287,6 +288,12 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
       ctx.font = '16px monospace';
       ctx.fillText(`Score: ${scoreRef.current}`, CW / 2, CH / 2 + 16);
     }
+    // Only submit on-chain if the player earned a reward — no gas cost for low scores
+    if (scoreRef.current < 1000) {
+      setReward(0);
+      setPhase('result');
+      return;
+    }
     const doSubmit = async () => {
       setTxMsg('Submitting result on-chain...');
       try {
@@ -325,11 +332,7 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
       frameRef.current = requestAnimationFrame(loop);
     } catch (err) {
       const msg = err.reason || err.shortMessage || err.message || '';
-      if (msg.includes('Active game already in progress')) {
-        setPhase('active_found');
-      } else {
-        setTxMsg('❌ ' + msg.slice(0, 80));
-      }
+      setTxMsg('❌ ' + msg.slice(0, 80));
     }
   };
 
@@ -342,117 +345,86 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
 
   // ── Render ────────────────────────────────────────────────────────────────
   return (
-    <div className="page" style={{ maxWidth: 560, paddingTop: 20 }}>
-      <button className="btn-pixel" onClick={() => {
-        if (phase === 'playing') {
-          if (window.confirm('Quit? Your 1 GOLD entry fee is non-refundable.')) {
+    <div className="page" style={{ maxWidth: 860, paddingTop: 20 }}>
+      {showQuit && (
+        <QuitModal
+          onConfirm={() => {
             activeRef.current = false;
             if (frameRef.current) cancelAnimationFrame(frameRef.current);
-            contracts.brickBreaker.forfeit().then(tx => tx.wait()).then(() => { refresh(); setPage('home'); }).catch(() => setPage('home'));
-          }
-        } else { setPage('home'); }
-      }} style={{ marginBottom: 16, fontSize: 12, padding: '8px 14px' }}>
+            setShowQuit(false);
+            setPage('home');
+          }}
+          onCancel={() => setShowQuit(false)}
+        />
+      )}
+      <button className="btn-pixel" onClick={() => {
+        if (phase === 'playing') setShowQuit(true);
+        else setPage('home');
+      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
         ← Back
       </button>
       <h1 className="page-title">🧱 Brick Breaker</h1>
 
-      {/* ── Leftover active game ── */}
-      {phase === 'active_found' && (
-        <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 40, marginBottom: 12 }}>⚠️</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 11, marginBottom: 12 }}>Unfinished Game Found</h2>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 20 }}>
-            You left a Brick Breaker game in progress. Forfeit it to start a new one (entry fee already spent).
-          </p>
-          <button className="btn-pixel" onClick={async () => {
-            setTxMsg('Forfeiting...');
-            try {
-              const tx = await contracts.brickBreaker.forfeit();
-              await tx.wait();
-              await refresh();
-              setTxMsg('');
-              setPhase('start');
-            } catch (err) {
-              setTxMsg('❌ ' + (err.reason || err.shortMessage || err.message || 'Failed').slice(0, 80));
-            }
-          }}>
-            Forfeit &amp; Start New
-          </button>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
-        </div>
-      )}
-
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>🧱</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 12, marginBottom: 10 }}>Break all the bricks!</h2>
-          <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 8 }}>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>🧱</div>
+          <h2>Break all the bricks!</h2>
+          <p>
             Move the paddle with your mouse or arrow keys.
             3 lives — don't let the ball fall!
           </p>
-          <div style={{ background: 'var(--cream)', border: '2px solid var(--navy)', borderRadius: 8, padding: '10px 20px', marginBottom: 20, display: 'inline-block' }}>
-            <p style={{ fontFamily: 'var(--pixel-font)', fontSize: 8, lineHeight: 2 }}>
-              1,000 pts = 2 GOLD &nbsp;|&nbsp; 5,000 = 7 GOLD<br />
-              10,000 pts = 15 GOLD (clear all bricks!)
-            </p>
-          </div>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 14, padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
-          {txMsg && <p style={{ marginTop: 12, fontSize: 13 }}>{txMsg}</p>}
+          {txMsg && <p className="tx-msg">{txMsg}</p>}
         </div>
       )}
 
       {/* ── Canvas ── */}
       {(phase === 'playing' || phase === 'gameover' || phase === 'submitting') && (
-        <div>
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <canvas
-              ref={canvasRef}
-              width={CW}
-              height={CH}
-              style={{
-                border: 'var(--border)',
-                borderRadius: 'var(--radius)',
-                boxShadow: 'var(--shadow)',
-                display: 'block',
-                cursor: 'none',
-              }}
-            />
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <canvas
+                ref={canvasRef}
+                width={CW}
+                height={CH}
+                style={{
+                  border: 'var(--border)',
+                  borderRadius: 'var(--radius)',
+                  boxShadow: 'var(--shadow)',
+                  display: 'block',
+                  cursor: 'none',
+                }}
+              />
+            </div>
+            <p className="game-status">Mouse or ← → arrow keys to move paddle</p>
+            {(txMsg || phase === 'submitting') && (
+              <p className="game-status">{txMsg || '⏳ Confirming on-chain...'}</p>
+            )}
           </div>
-          <p style={{ textAlign: 'center', marginTop: 8, fontSize: 12, color: 'var(--brown)' }}>
-            Mouse or ← → arrow keys to move paddle
-          </p>
-          {(txMsg || phase === 'submitting') && (
-            <p style={{ textAlign: 'center', marginTop: 8, fontSize: 13, color: 'var(--brown)' }}>
-              {txMsg || '⏳ Confirming on-chain...'}
-            </p>
-          )}
+          <RewardPanel tiers={BRICK_REWARDS} current={score} higherIsBetter={true} />
         </div>
       )}
 
       {/* ── Result screen ── */}
       {phase === 'result' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 56, marginBottom: 12 }}>{reward > 0 ? '🏆' : '🧱'}</div>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: 13, marginBottom: 12 }}>
-            {score >= 10000 ? 'All Bricks Cleared!' : 'Game Over!'}
-          </h2>
-          <p style={{ fontSize: 15, color: 'var(--brown)', marginBottom: 8 }}>
-            Final score: <strong>{score.toLocaleString()}</strong> pts
-          </p>
+          <div style={{ fontSize: 64, marginBottom: 12 }}>{reward > 0 ? '🏆' : '🧱'}</div>
+          <h2>{score >= 10000 ? 'All Bricks Cleared!' : 'Game Over!'}</h2>
+          <p>Final score: <strong>{score.toLocaleString()}</strong> pts</p>
           {reward > 0
-            ? <p style={{ fontSize: 16, color: 'var(--gold-dark)', fontWeight: 'bold', marginBottom: 8 }}>+{reward} GOLD earned!</p>
-            : <p style={{ fontSize: 14, color: 'var(--brown)', marginBottom: 8 }}>Score 1,000+ to earn GOLD!</p>
+            ? <p className="reward-text">+{reward} GOLD earned!</p>
+            : <p>Score 1,000+ to earn GOLD!</p>
           }
-          <p style={{ fontSize: 13, color: 'var(--brown)', marginBottom: 4 }}>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
-          {txMsg && <p style={{ fontSize: 12, color: '#c00', marginBottom: 8 }}>{txMsg}</p>}
+          <p>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
+          {txMsg && <p className="tx-error">{txMsg}</p>}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
-            <button className="btn-pixel green" onClick={playAgain}>Play Again</button>
-            <button className="btn-pixel" onClick={() => setPage('home')}>Home</button>
+            <button className="btn-pixel green large" onClick={playAgain}>Play Again</button>
+            <button className="btn-pixel large" onClick={() => setPage('home')}>Home</button>
           </div>
         </div>
       )}

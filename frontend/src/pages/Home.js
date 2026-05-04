@@ -1,7 +1,8 @@
 // frontend/src/pages/Home.js
 // Home page — hero section with player card + featured game cards
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import SpriteButton from '../components/SpriteButton';
 import { ethers } from 'ethers';
 
 const GAMES = [
@@ -12,9 +13,28 @@ const GAMES = [
   { id: 'connectfour',  name: 'Connect Four',  icon: '🔴', reward: 'Up to 10 GOLD', description: 'Connect 4 to win',          color: '#bdeefe' },
 ];
 
-function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFaucet, formatGold, setPage, connect }) {
+function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, lastDailyClaim, loading, claimFaucet, formatGold, setPage, connect }) {
   const [topPlayers, setTopPlayers] = useState([]);
   const [faucetMsg,  setFaucetMsg]  = useState(null);
+  const [cooldown,   setCooldown]   = useState('');  // e.g. "5h 23m"
+
+  // Compute faucet cooldown from lastDailyClaim timestamp
+  const updateCooldown = useCallback(() => {
+    if (!lastDailyClaim || lastDailyClaim === 0n) { setCooldown(''); return; }
+    const nextClaim = Number(lastDailyClaim) + 86400; // 24h in seconds
+    const remaining = nextClaim - Math.floor(Date.now() / 1000);
+    if (remaining <= 0) { setCooldown(''); return; }
+    const h = Math.floor(remaining / 3600);
+    const m = Math.floor((remaining % 3600) / 60);
+    setCooldown(h > 0 ? `${h}h ${m}m` : `${m}m`);
+  }, [lastDailyClaim]);
+
+  // Update cooldown every minute
+  useEffect(() => {
+    updateCooldown();
+    const interval = setInterval(updateCooldown, 60000);
+    return () => clearInterval(interval);
+  }, [updateCooldown]);
 
   // Fetch top 3 leaderboard players
   useEffect(() => {
@@ -58,7 +78,7 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFa
 
         {/* Decorative wooden house behind everything */}
         <img
-          src="/assets/Wooden House.png"
+          src="/assets/home_logo.png"
           alt=""
           className="hero-house"
           style={{ imageRendering: 'pixelated' }}
@@ -67,8 +87,8 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFa
         {/* Left — tagline + CTA buttons */}
         <div className="hero-left">
           <h1 className="hero-title">
-            PLAY <span style={{ color: '#4a9e6b' }}>PIXEL</span> GAMES,<br />
-            EARN REAL <span style={{ color: '#e07a3a' }}>REWARDS.</span>
+            PLAY <span style={{ color: '#4a9e6b' }}>MINI</span> GAMES,<br />
+            EARN <span style={{ color: '#e0b93a' }}>GOLD</span> TOKENS.
           </h1>
           <p className="hero-sub">
             Welcome to Pixel Grove, where fun meets blockchain.<br />
@@ -117,12 +137,12 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFa
             <div className="player-card">
               {/* Player greeting */}
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
-                <div style={{ fontSize: '36px' }}>🧑‍🌾</div>
+                <div style={{ fontSize: '40px' }}>🧑‍🌾</div>
                 <div>
-                  <div style={{ fontFamily: 'var(--pixel-font)', fontSize: '15px' }}>
+                  <div style={{ fontFamily: 'var(--pixel-font)', fontSize: '22px' }}>
                     Hi, {stats?.name || '...'}
                   </div>
-                  <div style={{ fontSize: '13px', color: 'var(--brown)', marginTop: '2px' }}>
+                  <div style={{ fontSize: '18px', color: 'var(--brown)', marginTop: '2px' }}>
                     Level {stats?.level?.toString() || '1'} ⭐
                   </div>
                 </div>
@@ -141,15 +161,20 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFa
                   <div className="stat-chip-label">Wins</div>
                 </div>
                 <div className="stat-chip peach">
-                  <div className="stat-chip-icon">⭐</div>
-                  <div className="stat-chip-value">{stats?.level?.toString() || '1'}</div>
-                  <div className="stat-chip-label">Level</div>
+                  <div className="stat-chip-icon">📈</div>
+                  <div className="stat-chip-value">{formatGold(dailyEarned ?? 0n)}</div>
+                  <div className="stat-chip-label">Today</div>
                 </div>
               </div>
 
               {/* Daily faucet button */}
-              <button className="btn-pixel gold" onClick={handleFaucet} disabled={loading} style={{ width: '100%', fontSize: '14px' }}>
-                🪙 Claim Daily 10 GOLD
+              <button
+                className="btn-pixel gold"
+                onClick={handleFaucet}
+                disabled={loading || !!cooldown}
+                style={{ width: '100%', fontSize: '14px' }}
+              >
+                {cooldown ? `⏳ Available in ${cooldown}` : '🪙 Claim Daily 10 GOLD'}
               </button>
               {faucetMsg && <p style={{ fontSize: '13px', marginTop: '8px', textAlign: 'center' }}>{faucetMsg}</p>}
             </div>
@@ -161,7 +186,7 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFa
       {/* ══════════════════════════════════════════════════════
           FEATURED GAMES
       ══════════════════════════════════════════════════════ */}
-      <div className="page">
+      <div style={{ padding: '32px 64px' }}>
 
         <h2 className="page-title">🎮 Featured Games</h2>
 
@@ -189,15 +214,12 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, loading, claimFa
                 <div className="game-card-reward">
                   Earn up to <span>{game.reward}</span>
                 </div>
-                <button
-                  className="btn-pixel green"
-                  onClick={() => setPage(game.id)}
-                  disabled={!hasNFT}
-                  title={!hasNFT ? 'Mint a Player NFT first' : ''}
-                  style={{ marginTop: '4px', fontSize: '14px' }}
-                >
-                  ▶ Play
-                </button>
+                <div style={{ marginTop: '4px' }} title={!hasNFT ? 'Mint a Player NFT first' : ''}>
+                  <SpriteButton
+                    onClick={() => setPage(game.id)}
+                    disabled={!hasNFT}
+                  />
+                </div>
               </div>
 
             </div>
