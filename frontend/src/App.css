@@ -1,38 +1,508 @@
-.App {
-  text-align: center;
+/* ============================================================
+   App.css — Pixel Grove Global Styles
+   Color palette: cream, mint, peach, lavender, gold, navy
+   Font: Press Start 2P (pixel), system font for body text
+   ============================================================ */
+
+@import url("https://fonts.googleapis.com/css2?family=Jersey+10&display=swap");
+
+/* Load the Sprout Lands pixel font from local assets */
+@font-face {
+  font-family: "SproutLands";
+  src: url("./assets/pixelFont-7-8x14-sproutLands.ttf") format("truetype");
 }
 
-.App-logo {
-  height: 40vmin;
-  pointer-events: none;
+/* ── CSS Variables ────────────────────────────────────────── */
+:root {
+  --cream:      #f5ede0;
+  --mint:       #a8e6cf;
+  --peach:      #ffd3b6;
+  --lavender:   #e4c1f9;
+  --gold:       #f6c453;
+  --gold-dark:  #d9a441;
+  --navy:       #2c2f5a;
+  --brown:      #8b6b4e;
+  --brown-dark: #5c4033;
+  --white:      #fffdf9;
+  --sky:        #c8ecf8;
+  --grass:      #7ec87e;
+
+  --pixel-font: "SproutLands", "Jersey 10", monospace;
+  --body-font:  "Jersey 10", monospace;
+
+  --border: 3px solid var(--navy);
+  --shadow: 4px 4px 0px var(--navy);
+  --radius: 12px;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  .App-logo {
-    animation: App-logo-spin infinite 20s linear;
-  }
+/* ── Reset ────────────────────────────────────────────────── */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
 }
 
-.App-header {
-  background-color: #282c34;
+body {
+  background-color: var(--cream);
+  font-family: var(--body-font);
+  color: var(--navy);
   min-height: 100vh;
+  font-size: 18px;
+}
+
+/* ── Header ───────────────────────────────────────────────── */
+.header {
+  background-color: var(--white);
+  border-bottom: var(--border);
+  padding: 12px 32px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.header-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  text-decoration: none;
+}
+
+.header-logo span {
+  font-family: var(--pixel-font);
+  font-size: 14px;
+  color: var(--navy);
+  line-height: 1.4;
+}
+
+.logo-pixel {
+  color: var(--mint);
+}
+
+.logo-grove {
+  color: var(--peach);
+}
+
+/* ── Navigation ───────────────────────────────────────────── */
+.nav {
+  display: flex;
+  gap: 8px;
+}
+
+.nav-btn {
+  font-family: var(--body-font);
+  font-size: 14px;
+  /* font-weight: 600; */
+  background: none;
+  border: 2px solid transparent;
+  border-radius: var(--radius);
+  padding: 8px 16px;
+  cursor: pointer;
+  color: var(--navy);
+  transition: all 0.1s;
+}
+
+.nav-btn:hover {
+  background-color: var(--cream);
+  border-color: var(--navy);
+}
+
+.nav-btn.active {
+  background-color: var(--mint);
+  border: var(--border);
+  box-shadow: var(--shadow);
+}
+
+/* ── Wallet Bar (right side of header) ───────────────────── */
+.wallet-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.gold-badge {
+  background-color: var(--gold);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 6px 12px;
+  font-family: var(--pixel-font);
+  font-size: 9px;
+  color: var(--navy);
+  box-shadow: var(--shadow);
+}
+
+.wallet-address {
+  font-size: 12px;
+  color: var(--brown);
+  font-family: monospace;
+}
+
+.btn-connect {
+  font-family: var(--pixel-font);
+  font-size: 9px;
+  background-color: var(--mint);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  color: var(--navy);
+  transition: transform 0.1s, box-shadow 0.1s;
+}
+
+.btn-connect:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--navy);
+}
+
+.btn-connect:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--navy);
+}
+
+/* ── Page Container ───────────────────────────────────────── */
+.page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 32px 24px;
+}
+
+.page-title {
+  font-family: var(--pixel-font);
+  font-size: 16px;
+  color: var(--navy);
+  margin-bottom: 24px;
+}
+
+/* ── Cards ────────────────────────────────────────────────── */
+.card {
+  background-color: var(--white);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+/* ── Pixel Button (primary action) ───────────────────────── */
+.btn-pixel {
+  font-family: var(--pixel-font);
+  font-size: 9px;
+  background-color: var(--peach);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 12px 20px;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+  color: var(--navy);
+  transition: transform 0.1s, box-shadow 0.1s;
+  display: inline-block;
+}
+
+.btn-pixel:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--navy);
+}
+
+.btn-pixel:active {
+  transform: translate(2px, 2px);
+  box-shadow: 2px 2px 0px var(--navy);
+}
+
+.btn-pixel:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: var(--shadow);
+}
+
+.btn-pixel.green {
+  background-color: var(--mint);
+}
+.btn-pixel.purple {
+  background-color: var(--lavender);
+}
+.btn-pixel.gold {
+  background-color: var(--gold);
+}
+
+/* ── Error / Status Messages ──────────────────────────────── */
+.error-msg {
+  background-color: #ffd3d3;
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: #8b0000;
+  margin-top: 12px;
+}
+
+.success-msg {
+  background-color: var(--mint);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 10px 16px;
+  font-size: 13px;
+  color: var(--navy);
+  margin-top: 12px;
+}
+
+/* ── Game Grid (Home page) ────────────────────────────────── */
+.game-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 16px;
+  margin-top: 24px;
+}
+
+/* Card is split into colored top + white bottom, like the reference */
+.game-card {
+  background-color: var(--white);
+  border: var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  text-align: center;
+  transition: transform 0.1s, box-shadow 0.1s;
+  cursor: pointer;
+}
+
+.game-card:hover {
+  transform: translate(-2px, -2px);
+  box-shadow: 6px 6px 0px var(--navy);
+}
+
+/* Colored top section — holds the icon */
+.game-card-top {
+  padding: 28px 16px 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* White bottom section — holds all text + button */
+.game-card-body {
+  background: var(--white);
+  padding: 14px 12px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  font-size: calc(10px + 2vmin);
-  color: white;
+  gap: 8px;
+  flex: 1;
+  border-top: var(--border);
 }
 
-.App-link {
-  color: #61dafb;
+.game-card-icon {
+  font-size: 52px;
+  image-rendering: pixelated;
 }
 
-@keyframes App-logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+.game-card-name {
+  font-family: var(--pixel-font);
+  font-size: 15px;
+  color: var(--navy);
+  line-height: 1.5;
 }
+
+.game-card-desc {
+  font-size: 13px;
+  color: var(--brown);
+}
+
+.game-card-reward {
+  font-size: 14px;
+  color: var(--brown);
+}
+
+.game-card-reward span {
+  color: var(--gold-dark);
+  font-weight: bold;
+}
+
+/* ── Leaderboard Table ────────────────────────────────────── */
+.leaderboard-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 16px;
+}
+
+.leaderboard-table th {
+  font-family: var(--pixel-font);
+  font-size: 8px;
+  padding: 12px;
+  background-color: var(--mint);
+  border: var(--border);
+  text-align: left;
+}
+
+.leaderboard-table td {
+  padding: 12px;
+  border: 2px solid var(--navy);
+  font-size: 13px;
+  background-color: var(--white);
+}
+
+.leaderboard-table tr:nth-child(even) td {
+  background-color: var(--cream);
+}
+
+/* ── Profile Stats Grid ───────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.stat-box {
+  background-color: var(--cream);
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+  text-align: center;
+}
+
+.stat-box-label {
+  font-size: 11px;
+  color: var(--brown);
+  margin-bottom: 8px;
+}
+
+.stat-box-value {
+  font-family: var(--pixel-font);
+  font-size: 14px;
+  color: var(--navy);
+}
+
+/* ── No NFT Banner ────────────────────────────────────────── */
+.no-nft-banner {
+  background-color: var(--peach);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 24px;
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.no-nft-banner p {
+  font-size: 14px;
+  margin-bottom: 16px;
+  color: var(--navy);
+}
+
+/* ── Loading Spinner ──────────────────────────────────────── */
+.loading {
+  font-family: var(--pixel-font);
+  font-size: 10px;
+  color: var(--brown);
+  padding: 32px;
+  text-align: center;
+}
+
+/* ── Hero Section ─────────────────────────────────────────── */
+.hero {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  padding: 48px 64px 0 64px;
+  /* Sky gradient top → grass green bottom */
+  background: linear-gradient(180deg, #c8ecf8 0%, #d8f0c0 55%, #8fc96c 100%);
+  border-bottom: var(--border);
+  overflow: hidden;
+  min-height: 380px;
+}
+
+/* Tiled grass texture at the bottom of the hero */
+.hero::before {
+  content: "";
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+  background-image: url("./assets/Grass.png");
+  background-repeat: repeat-x;
+  background-size: auto 100px;
+  image-rendering: pixelated;
+  opacity: 0.6;
+}
+
+/* Wooden house decorative image — centered behind content */
+.hero-house {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  height: 220px;
+  image-rendering: pixelated;
+  z-index: 0;
+  opacity: 0.85;
+}
+
+.hero-left {
+  position: relative;
+  z-index: 2;
+  flex: 1;
+  max-width: 500px;
+}
+
+.hero-title {
+  font-family: var(--pixel-font);
+  font-size: 36px;
+  line-height: 1.5;
+  color: var(--navy);
+  margin-bottom: 16px;
+  text-shadow: 2px 2px 0 rgba(255,255,255,0.5);
+}
+
+.hero-sub {
+  font-size: 18px;
+  color: var(--brown-dark);
+  margin-bottom: 28px;
+  line-height: 1.7;
+  background: rgba(255,255,255,0.6);
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: inline-block;
+}
+
+.hero-right {
+  position: relative;
+  z-index: 2;
+  flex-shrink: 0;
+  width: 280px;
+  align-self: flex-start;
+  margin-top: 8px;
+}
+
+/* ── Player Card (hero right panel) ──────────────────────── */
+.player-card {
+  background-color: rgba(255, 253, 249, 0.95);
+  border: var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+}
+
+/* ── Stat Chips (inside player card) ─────────────────────── */
+.stat-chip {
+  flex: 1;
+  border: var(--border);
+  border-radius: var(--radius);
+  padding: 10px 6px;
+  text-align: center;
+}
+
+.stat-chip.gold  { background-color: var(--gold); }
+.stat-chip.mint  { background-color: var(--mint); }
+.stat-chip.peach { background-color: var(--peach); }
+
+.stat-chip-icon  { font-size: 20px; }
+.stat-chip-value { font-family: var(--pixel-font); font-size: 16px; margin: 4px 0; }
+.stat-chip-label { font-size: 13px; color: var(--brown); }
