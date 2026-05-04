@@ -44,13 +44,86 @@ function checkWin(board, p) {
 const isFull = (board) => board[0].every(c => c !== EMPTY);
 const validCols = (board) => Array.from({ length: COLS }, (_, c) => c).filter(c => board[0][c] === EMPTY);
 
+// ── Minimax helpers ──────────────────────────────────────────────────────────
+
+function scoreWindow(window, piece) {
+  const opp = piece === AI ? PLAYER : AI;
+  const count    = window.filter(c => c === piece).length;
+  const empty    = window.filter(c => c === EMPTY).length;
+  const oppCount = window.filter(c => c === opp).length;
+  if (count === 4)                    return 100;
+  if (count === 3 && empty === 1)     return 5;
+  if (count === 2 && empty === 2)     return 2;
+  if (oppCount === 3 && empty === 1)  return -4;
+  return 0;
+}
+
+function scoreBoard(board, piece) {
+  let score = 0;
+  const mid = Math.floor(COLS / 2);
+  // Prefer center column
+  score += board.map(r => r[mid]).filter(c => c === piece).length * 3;
+  // Horizontal
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c <= COLS - 4; c++)
+      score += scoreWindow([board[r][c],board[r][c+1],board[r][c+2],board[r][c+3]], piece);
+  // Vertical
+  for (let c = 0; c < COLS; c++)
+    for (let r = 0; r <= ROWS - 4; r++)
+      score += scoreWindow([board[r][c],board[r+1][c],board[r+2][c],board[r+3][c]], piece);
+  // Diagonal ↘
+  for (let r = 0; r <= ROWS - 4; r++)
+    for (let c = 0; c <= COLS - 4; c++)
+      score += scoreWindow([board[r][c],board[r+1][c+1],board[r+2][c+2],board[r+3][c+3]], piece);
+  // Diagonal ↗
+  for (let r = 3; r < ROWS; r++)
+    for (let c = 0; c <= COLS - 4; c++)
+      score += scoreWindow([board[r][c],board[r-1][c+1],board[r-2][c+2],board[r-3][c+3]], piece);
+  return score;
+}
+
+function isTerminalNode(board) {
+  return checkWin(board, PLAYER) || checkWin(board, AI) || validCols(board).length === 0;
+}
+
+function minimax(board, depth, alpha, beta, maximizing) {
+  if (depth === 0 || isTerminalNode(board)) {
+    if (checkWin(board, AI))     return { score:  1e8 };
+    if (checkWin(board, PLAYER)) return { score: -1e8 };
+    if (validCols(board).length === 0) return { score: 0 };
+    return { score: scoreBoard(board, AI) };
+  }
+  const valid = validCols(board);
+  if (maximizing) {
+    let best = { col: valid[0], score: -Infinity };
+    for (const col of valid) {
+      const b = dropPiece(board, col, AI);
+      if (!b) continue;
+      const { score } = minimax(b, depth - 1, alpha, beta, false);
+      if (score > best.score) best = { col, score };
+      alpha = Math.max(alpha, score);
+      if (alpha >= beta) break;
+    }
+    return best;
+  } else {
+    let best = { col: valid[0], score: Infinity };
+    for (const col of valid) {
+      const b = dropPiece(board, col, PLAYER);
+      if (!b) continue;
+      const { score } = minimax(b, depth - 1, alpha, beta, true);
+      if (score < best.score) best = { col, score };
+      beta = Math.min(beta, score);
+      if (alpha >= beta) break;
+    }
+    return best;
+  }
+}
+
 function getAIMove(board) {
   const valid = validCols(board);
   if (valid.length === 0) return -1;
-  for (const col of valid) { const b = dropPiece(board, col, AI); if (b && checkWin(b, AI)) return col; }
-  for (const col of valid) { const b = dropPiece(board, col, PLAYER); if (b && checkWin(b, PLAYER)) return col; }
-  if (valid.includes(3)) return 3;
-  return valid[Math.floor(Math.random() * valid.length)];
+  const { col } = minimax(board, 6, -Infinity, Infinity, true);
+  return col ?? 3;
 }
 
 function ConnectFour({ account, contracts, goldBalance, refresh, formatGold, setPage }) {
@@ -141,13 +214,13 @@ function ConnectFour({ account, contracts, goldBalance, refresh, formatGold, set
   };
 
   const cellColor = (val) => {
-    if (val === PLAYER) return '#ef4444';
-    if (val === AI)     return '#f6c453';
+    if (val === PLAYER) return '#E76F51';
+    if (val === AI)     return '#F2C94C';
     return 'var(--white)';
   };
 
   return (
-    <div className="page" style={{ maxWidth: 860, paddingTop: 20 }}>
+    <div className="page" style={{ maxWidth: 1000, paddingTop: 20 }}>
       {showQuit && (
         <QuitModal
           onConfirm={() => { setShowQuit(false); setPage('home'); }}
@@ -157,22 +230,22 @@ function ConnectFour({ account, contracts, goldBalance, refresh, formatGold, set
       <button className="btn-pixel" onClick={() => {
         if (phase === 'playing' && !winner) setShowQuit(true);
         else setPage('home');
-      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
+      }} style={{ marginBottom: 16 }}>
         ← Back
       </button>
-      <h1 className="page-title">🔴 Connect Four</h1>
+      <h1 className="page-title">Connect Four</h1>
 
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>🔴</div>
+          <img src="/assets/icon-connectfour.png" alt="" style={{ width: 120, height: 'auto', imageRendering: 'pixelated', marginBottom: 12 }} />
           <h2>Connect 4 in a row to win!</h2>
           <p>You are 🔴 Red. The AI plays 🟡 Yellow.</p>
           <p style={{ marginBottom: 20 }}>
             Drop pieces by clicking a column. Get 4 in a row — horizontal, vertical, or diagonal.
           </p>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
@@ -182,58 +255,58 @@ function ConnectFour({ account, contracts, goldBalance, refresh, formatGold, set
 
       {/* ── Game board ── */}
       {(phase === 'playing' || phase === 'submitting') && (
-        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
-          <div style={{ flex: 1 }}>
-          <div style={{ textAlign: 'center', marginBottom: 12, fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)' }}>
-            {aiThinking ? '🟡 AI is thinking...' : turn === PLAYER ? '🔴 Your turn!' : ''}
-          </div>
+        <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start', justifyContent: 'center' }}>
+          <div className="card" style={{ flex: 1, textAlign: 'center' }}>
+            <div style={{ marginBottom: 16, fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)' }}>
+              {aiThinking ? '🟡 AI is thinking...' : turn === PLAYER ? '🔴 Your turn!' : ''}
+            </div>
 
-          <div style={{ display: 'flex', justifyContent: 'center' }}>
-            <div style={{ display: 'inline-grid', gridTemplateColumns: `repeat(${COLS}, 56px)`, gap: 4 }}>
-              {Array.from({ length: COLS }, (_, c) => (
-                <div key={c} style={{
-                  height: 24, display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  cursor: phase === 'playing' && turn === PLAYER && !aiThinking ? 'pointer' : 'default',
-                  fontSize: 14,
-                  color: hoverCol === c ? 'var(--navy)' : 'transparent',
-                }}
-                  onMouseEnter={() => setHoverCol(c)}
-                  onMouseLeave={() => setHoverCol(null)}
-                  onClick={() => handleColumnClick(c)}
-                >▼</div>
-              ))}
-
-              {Array.from({ length: ROWS }, (_, r) =>
-                Array.from({ length: COLS }, (_, c) => (
-                  <div key={`${r}-${c}`} style={{
-                    width: 56, height: 52,
-                    background: hoverCol === c && turn === PLAYER && !aiThinking && board[r][c] === EMPTY
-                      ? 'var(--cream)' : 'var(--navy)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    borderRadius: 8,
+            <div style={{ display: 'flex', justifyContent: 'center' }}>
+              <div style={{ display: 'inline-grid', gridTemplateColumns: `repeat(${COLS}, 72px)`, gap: 6 }}>
+                {Array.from({ length: COLS }, (_, c) => (
+                  <div key={c} style={{
+                    height: 28, display: 'flex', alignItems: 'center', justifyContent: 'center',
                     cursor: phase === 'playing' && turn === PLAYER && !aiThinking ? 'pointer' : 'default',
+                    fontSize: 18,
+                    color: hoverCol === c ? 'var(--navy)' : 'transparent',
                   }}
                     onMouseEnter={() => setHoverCol(c)}
                     onMouseLeave={() => setHoverCol(null)}
                     onClick={() => handleColumnClick(c)}
-                  >
-                    {board[r][c] !== EMPTY && (
-                      <div style={{
-                        width: 42, height: 42, borderRadius: '50%',
-                        background: cellColor(board[r][c]),
-                        border: '3px solid rgba(0,0,0,0.2)',
-                        boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.3)',
-                      }} />
-                    )}
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
+                  >▼</div>
+                ))}
 
-          {(txMsg || phase === 'submitting') && (
-            <p className="game-status">{txMsg || '⏳ Confirming on-chain...'}</p>
-          )}
+                {Array.from({ length: ROWS }, (_, r) =>
+                  Array.from({ length: COLS }, (_, c) => (
+                    <div key={`${r}-${c}`} style={{
+                      width: 72, height: 66,
+                      background: hoverCol === c && turn === PLAYER && !aiThinking && board[r][c] === EMPTY
+                        ? '#7AAEE8' : '#4C7ECF',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      borderRadius: 10,
+                      cursor: phase === 'playing' && turn === PLAYER && !aiThinking ? 'pointer' : 'default',
+                    }}
+                      onMouseEnter={() => setHoverCol(c)}
+                      onMouseLeave={() => setHoverCol(null)}
+                      onClick={() => handleColumnClick(c)}
+                    >
+                      {board[r][c] !== EMPTY && (
+                        <div style={{
+                          width: 54, height: 54, borderRadius: '50%',
+                          background: cellColor(board[r][c]),
+                          border: '3px solid rgba(0,0,0,0.2)',
+                          boxShadow: 'inset 0 2px 4px rgba(255,255,255,0.3)',
+                        }} />
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+
+            {(txMsg || phase === 'submitting') && (
+              <p className="game-status">{txMsg || '⏳ Confirming on-chain...'}</p>
+            )}
           </div>
           <RewardPanel tiers={C4_REWARDS} current={winner === PLAYER ? 1 : 0} higherIsBetter={true} />
         </div>

@@ -14,21 +14,21 @@ const BRICK_REWARDS = [
 ];
 
 // ── Canvas dimensions ─────────────────────────────────────────────────────────
-const CW = 480;   // canvas width
-const CH = 380;   // canvas height
+const CW = 580;   // canvas width
+const CH = 460;   // canvas height
 
 // ── Brick grid ────────────────────────────────────────────────────────────────
 const BRICK_ROWS   = 5;
-const BRICK_COLS   = 10;
-const BRICK_W      = 42;   // brick width
-const BRICK_H      = 18;   // brick height
+const BRICK_COLS   = 12;
+const BRICK_W      = 43;   // brick width
+const BRICK_H      = 20;   // brick height
 const BRICK_GAP    = 4;    // gap between bricks
 const BRICK_OFF_X  = (CW - (BRICK_COLS * (BRICK_W + BRICK_GAP) - BRICK_GAP)) / 2;
 const BRICK_OFF_Y  = 40;   // top offset
-const POINTS_EACH  = 200;  // points per brick (50 bricks × 200 = 10000 max)
+const POINTS_EACH  = 167;  // points per brick (60 bricks × 167 ≈ 10000 max)
 
-// Row colors (top to bottom)
-const ROW_COLORS = ['#ef4444', '#f97316', '#f6c453', '#4a9e6b', '#3b82f6'];
+// Row colors (top to bottom) — design system breaker palette
+const ROW_COLORS = ['#FF6B6B', '#F7B267', '#FFE066', '#7BD389', '#4D96FF'];
 
 // ── Paddle ────────────────────────────────────────────────────────────────────
 const PADDLE_W   = 90;
@@ -116,8 +116,8 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
     // Paddle
     const px = paddleRef.current.x;
     const grad = ctx.createLinearGradient(px, PADDLE_Y, px, PADDLE_Y + PADDLE_H);
-    grad.addColorStop(0, '#a8e6cf');
-    grad.addColorStop(1, '#4a9e6b');
+    grad.addColorStop(0, '#A7D28D');
+    grad.addColorStop(1, '#5C8C4A');
     ctx.fillStyle = grad;
     ctx.beginPath();
     ctx.roundRect(px, PADDLE_Y, PADDLE_W, PADDLE_H, 6);
@@ -125,8 +125,8 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
 
     // Ball
     const ball = ballRef.current;
-    ctx.fillStyle = '#ffd3b6';
-    ctx.shadowColor = '#ffd3b6';
+    ctx.fillStyle = '#F7B37A';
+    ctx.shadowColor = '#F7B37A';
     ctx.shadowBlur = 10;
     ctx.beginPath();
     ctx.arc(ball.x, ball.y, BALL_R, 0, Math.PI * 2);
@@ -360,22 +360,22 @@ function BrickBreaker({ account, contracts, goldBalance, refresh, formatGold, se
       <button className="btn-pixel" onClick={() => {
         if (phase === 'playing') setShowQuit(true);
         else setPage('home');
-      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
+      }} style={{ marginBottom: 16 }}>
         ← Back
       </button>
-      <h1 className="page-title">🧱 Brick Breaker</h1>
+      <h1 className="page-title">Brick Breaker</h1>
 
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>🧱</div>
+          <img src="/assets/icon-brickbreaker.png" alt="" style={{ width: 120, height: 'auto', imageRendering: 'pixelated', marginBottom: 12 }} />
           <h2>Break all the bricks!</h2>
           <p>
             Move the paddle with your mouse or arrow keys.
             3 lives — don't let the ball fall!
           </p>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>

@@ -140,19 +140,19 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
       <button className="btn-pixel" onClick={() => {
         if (phase === 'playing') setShowQuit(true);
         else setPage('home');
-      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
+      }} style={{ marginBottom: 16 }}>
         ← Back
       </button>
-      <h1 className="page-title">🧠 Mind Match</h1>
+      <h1 className="page-title">Mind Match</h1>
 
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>🧠</div>
+          <img src="/assets/icon-memorymatch.png" alt="" style={{ width: 120, height: 'auto', imageRendering: 'pixelated', marginBottom: 12 }} />
           <h2>Match all 8 pairs to win!</h2>
           <p style={{ marginBottom: 16 }}>Flip two cards at a time. Find matching emojis!</p>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
@@ -176,13 +176,13 @@ function MemoryMatch({ account, contracts, goldBalance, refresh, formatGold, set
                 onClick={() => phase === 'playing' && handleCardClick(idx)}
                 style={{
                   aspectRatio: '1',
-                  background: card.matched ? 'var(--mint)' : card.flipped ? 'var(--peach)' : 'var(--navy)',
-                  border: '3px solid var(--navy)',
+                  background: card.matched ? '#A7D28D' : card.flipped ? '#FFF6E8' : '#E6D8C3',
+                  border: '2px solid var(--beige)',
                   borderRadius: 12,
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   fontSize: 36,
                   cursor: card.matched || card.flipped || locked ? 'default' : 'pointer',
-                  boxShadow: card.matched ? 'none' : '3px 3px 0 var(--navy)',
+                  boxShadow: card.matched ? 'none' : '2px 2px 0 rgba(107,79,58,0.2)',
                   transition: 'background 0.2s, transform 0.15s',
                   transform: card.flipped || card.matched ? 'scale(1.04)' : 'scale(1)',
                   userSelect: 'none',

@@ -103,8 +103,8 @@ function getLetterStatus(guesses, target) {
   return map;
 }
 
-const TILE_COLOR = { correct: '#a8e6cf', present: '#f6c453', absent: '#bbb' };
-const KEY_COLOR  = { correct: '#a8e6cf', present: '#f6c453', absent: '#999' };
+const TILE_COLOR = { correct: '#7FB069', present: '#F2C94C', absent: '#B0B0B0' };
+const KEY_COLOR  = { correct: '#7FB069', present: '#F2C94C', absent: '#B0B0B0' };
 const REWARD_MAP = [20, 15, 10, 7, 4, 2]; // index = guessCount - 1
 
 function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPage }) {
@@ -237,15 +237,15 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
       <button className="btn-pixel" onClick={() => {
         if (phase === 'playing' && !gameOver) setShowQuit(true);
         else setPage('home');
-      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
+      }} style={{ marginBottom: 16 }}>
         ← Back
       </button>
-      <h1 className="page-title">📜 Word Quest</h1>
+      <h1 className="page-title">Word Quest</h1>
 
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>📜</div>
+          <img src="/assets/icon-wordguess.png" alt="" style={{ width: 120, height: 'auto', imageRendering: 'pixelated', marginBottom: 12 }} />
           <h2>Guess the 5-letter word in 6 tries</h2>
           <div style={{ display: 'flex', justifyContent: 'center', gap: 20, marginBottom: 16 }}>
             {[['🟩','Correct spot'],['🟨','Wrong spot'],['⬜','Not in word']].map(([icon, label]) => (
@@ -256,7 +256,7 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
             ))}
           </div>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
@@ -269,7 +269,12 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
         <div style={{ display: 'flex', gap: 24, alignItems: 'flex-start' }}>
           <div style={{ flex: 1 }}>
           {/* 6×5 tile grid */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 10, alignItems: 'center', marginBottom: 24 }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: 8, alignItems: 'center',
+            marginBottom: 24, padding: '16px 20px', borderRadius: 20,
+            background: '#EDD9B2', border: '2px solid #C9A87C',
+            boxShadow: '3px 3px 0 rgba(107,79,58,0.15)',
+          }}>
             {Array.from({ length: 6 }, (_, row) => {
               const guessStr   = row < guesses.length ? guesses[row]
                                : row === guesses.length ? current : '';
@@ -284,18 +289,18 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
                   {Array.from({ length: 5 }, (_, col) => {
                     const letter = guessStr[col] || '';
                     const bg     = isSubmitted ? TILE_COLOR[colors[col]]
-                                 : letter ? 'var(--peach)' : 'var(--white)';
+                                 : letter ? '#F7B37A' : 'rgba(255,246,232,0.55)';
                     return (
                       <div key={col} style={{
-                        width: 72, height: 72,
+                        width: 76, height: 76,
                         background: bg,
-                        border: '3px solid var(--navy)',
-                        borderRadius: 8,
+                        border: '2px solid #C9A87C',
+                        borderRadius: 10,
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontFamily: 'var(--pixel-font)',
                         fontSize: 34,
                         color: 'var(--navy)',
-                        boxShadow: letter && !isSubmitted ? '2px 2px 0 var(--navy)' : 'none',
+                        boxShadow: letter && !isSubmitted ? '2px 2px 0 rgba(107,79,58,0.2)' : 'none',
                         transition: 'background 0.25s',
                       }}>
                         {letter}
@@ -314,14 +319,14 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
                 <div key={r} style={{ display: 'flex', gap: 6 }}>
                   {row.map(key => {
                     const st = letterStatus[key];
-                    const bg = st ? KEY_COLOR[st] : 'var(--peach)';
+                    const bg = st ? KEY_COLOR[st] : '#F7B37A';
                     return (
                       <button key={key} onClick={() => handleOnScreenKey(key)} style={{
-                        width: key.length > 1 ? 72 : 48, height: 58,
-                        background: bg, border: '2px solid var(--navy)', borderRadius: 6,
+                        width: key.length > 1 ? 90 : 62, height: 68,
+                        background: bg, border: '2px solid var(--beige)', borderRadius: 6,
                         cursor: 'pointer', fontFamily: 'var(--pixel-font)',
-                        fontSize: key.length > 1 ? 14 : 20, color: 'var(--navy)',
-                        boxShadow: '2px 2px 0 var(--navy)',
+                        fontSize: key.length > 1 ? 16 : 24, color: 'var(--navy)',
+                        boxShadow: '2px 2px 0 rgba(107,79,58,0.2)',
                       }}>
                         {key}
                       </button>
@@ -335,8 +340,8 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
           {/* Give Up + status */}
           <div style={{ textAlign: 'center' }}>
             {phase === 'playing' && (
-              <button className="btn-pixel" onClick={handleGiveUp}
-                style={{ fontSize: 'var(--font-sm)', padding: '6px 14px', opacity: 0.65 }}>
+              <button className="btn-pixel small" onClick={handleGiveUp}
+                style={{ opacity: 0.65, width: 200 }}>
                 Give Up
               </button>
             )}
@@ -351,6 +356,11 @@ function WordGuess({ account, contracts, goldBalance, refresh, formatGold, setPa
             tiers={WG_REWARDS}
             current={guesses.length > 0 ? guesses.length : undefined}
             higherIsBetter={false}
+            legend={[
+              { color: '#7FB069', label: 'Correct spot' },
+              { color: '#F2C94C', label: 'Wrong spot' },
+              { color: '#B0B0B0', label: 'Not in word' },
+            ]}
           />
         </div>
       )}

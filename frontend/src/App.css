@@ -8,25 +8,40 @@
 
 /* ── CSS Variables ────────────────────────────────────────── */
 :root {
-  --cream:      #f5ede0;
-  --mint:       #a8e6cf;
-  --peach:      #ffd3b6;
-  --lavender:   #e4c1f9;
-  --gold:       #f6c453;
-  --gold-dark:  #d9a441;
-  --navy:       #2c2f5a;
-  --brown:      #8b6b4e;
-  --brown-dark: #5c4033;
-  --white:      #fffdf9;
-  --sky:        #c8ecf8;
-  --grass:      #7ec87e;
+  /* Background */
+  --cream:       #F6EBD9;   /* page background                        */
+  --white:       #FFF6E8;   /* card / panel background                */
+  --beige:       #EAD9C2;   /* borders, dividers                      */
+
+  /* Text */
+  --navy:        #6B4F3A;   /* primary text (warm brown)              */
+  --brown:       #6B4F3A;
+  --brown-dark:  #4A3728;
+
+  /* Primary palette */
+  --green:       #7FB069;   /* primary buttons, confirm               */
+  --green-light: #A7D28D;   /* mint / highlights                      */
+  --green-dark:  #5C8C4A;
+
+  /* Accent */
+  --pink:        #F4A7A1;   /* secondary buttons                      */
+  --peach:       #F7B37A;   /* accent, active tiles                   */
+  --lavender:    #B79AC8;
+  --sky:         #A7D3E8;
+
+  /* Reward */
+  --gold:        #F2C94C;
+  --gold-dark:   #D4A72C;
+
+  /* Aliases kept for legacy references */
+  --mint:        #A7D28D;   /* = green-light                          */
 
   --pixel-font: "Jersey 10", monospace;
   --body-font:  "Jersey 10", monospace;
 
-  --border: 3px solid var(--navy);
-  --shadow: 4px 4px 0px var(--navy);
-  --radius: 12px;
+  --border: 2px solid var(--beige);
+  --shadow: 3px 3px 0px rgba(107, 79, 58, 0.22);
+  --radius: 14px;
 
   /* ── Font scale — change here to update the whole app ── */
   --font-sm:   18px;   /* reward tables, small labels            */
@@ -110,7 +125,7 @@ body {
 }
 
 .nav-btn.active {
-  background-color: var(--mint);
+  background-color: var(--green-light);
   border: var(--border);
   box-shadow: var(--shadow);
 }
@@ -129,37 +144,37 @@ body {
   padding: 6px 12px;
   font-family: var(--pixel-font);
   font-size: 20px;
-  color: var(--navy);
+  color: var(--brown-dark);
   box-shadow: var(--shadow);
 }
 
 .wallet-address {
-  font-size: 16px;
+  font-size: var(--font-sm);
   color: var(--brown);
-  font-family: monospace;
+  font-family: var(--pixel-font);
 }
 
 .btn-connect {
   font-family: var(--pixel-font);
   font-size: 20px;
-  background-color: var(--mint);
+  background-color: var(--green);
   border: var(--border);
   border-radius: var(--radius);
   padding: 10px 16px;
   cursor: pointer;
   box-shadow: var(--shadow);
-  color: var(--navy);
+  color: var(--cream);
   transition: transform 0.1s, box-shadow 0.1s;
 }
 
 .btn-connect:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--navy);
+  box-shadow: 5px 5px 0px rgba(107, 79, 58, 0.35);
 }
 
 .btn-connect:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px var(--navy);
+  box-shadow: 1px 1px 0px rgba(107, 79, 58, 0.35);
 }
 
 /* ── Page Container ───────────────────────────────────────── */
@@ -171,21 +186,23 @@ body {
 
 .page-title {
   font-family: var(--pixel-font);
-  font-size: 32px;
+  font-size: 42px;
   color: var(--navy);
   margin-bottom: 24px;
+  text-align: center;
 }
+
 
 /* ── Cards ────────────────────────────────────────────────── */
 .card {
-  background-color: var(--white);
-  border: var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 20px;
+  background-color: #EDD9B2;
+  border: 2px solid #C9A87C;
+  border-radius: 20px;
+  box-shadow: 3px 3px 0 rgba(107, 79, 58, 0.15);
+  padding: 24px;
 }
 
-/* Default text sizes inside cards — game pages inherit these automatically */
+/* Default text inside cards */
 .card p {
   font-size: var(--font-base);
   color: var(--brown);
@@ -214,15 +231,15 @@ body {
 
 .card .tx-error {
   font-size: var(--font-base);
-  color: #c00;
+  color: #c55;
   margin-bottom: 8px;
 }
 
 /* Reward table inside start-screen cards */
 .reward-table {
-  background: var(--cream);
-  border: 2px solid var(--navy);
-  border-radius: 8px;
+  background: rgba(0,0,0,0.06);
+  border: 2px solid #C9A87C;
+  border-radius: 12px;
   padding: 12px 24px;
   margin-bottom: 20px;
   display: inline-block;
@@ -256,11 +273,11 @@ body {
 /* ── Pixel Button (primary action) ───────────────────────── */
 .btn-pixel {
   font-family: var(--pixel-font);
-  font-size: 14px;
-  background-color: var(--peach);
+  font-size: var(--font-base);
+  background-color: var(--pink);
   border: var(--border);
   border-radius: var(--radius);
-  padding: 12px 20px;
+  padding: 12px 24px;
   cursor: pointer;
   box-shadow: var(--shadow);
   color: var(--navy);
@@ -270,12 +287,12 @@ body {
 
 .btn-pixel:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--navy);
+  box-shadow: 5px 5px 0px rgba(107, 79, 58, 0.35);
 }
 
 .btn-pixel:active {
   transform: translate(2px, 2px);
-  box-shadow: 2px 2px 0px var(--navy);
+  box-shadow: 1px 1px 0px rgba(107, 79, 58, 0.35);
 }
 
 .btn-pixel:disabled {
@@ -283,10 +300,12 @@ body {
   cursor: not-allowed;
   transform: none;
   box-shadow: var(--shadow);
+  background-color: var(--beige);
 }
 
 .btn-pixel.green {
-  background-color: var(--mint);
+  background-color: var(--green);
+  color: var(--cream);
 }
 .btn-pixel.purple {
   background-color: var(--lavender);
@@ -295,10 +314,15 @@ body {
   background-color: var(--gold);
 }
 
-/* Large result/modal buttons — matches the QuitModal button size */
+/* Large result/modal buttons — more padding, same font */
 .btn-pixel.large {
-  font-size: var(--font-base);
-  padding: 14px 28px;
+  padding: 14px 32px;
+}
+
+/* Small utility buttons e.g. Give Up, Refresh */
+.btn-pixel.small {
+  font-size: var(--font-sm);
+  padding: 8px 16px;
 }
 
 /* ── Error / Status Messages ──────────────────────────────── */
@@ -330,12 +354,12 @@ body {
   margin-top: 24px;
 }
 
-/* Card is split into colored top + white bottom */
+/* Card is split into colored top + tan bottom */
 .game-card {
-  background-color: var(--white);
-  border: var(--border);
-  border-radius: 16px;
-  box-shadow: var(--shadow);
+  background-color: #EDD9B2;
+  border: 2px solid #C9A87C;
+  border-radius: 20px;
+  box-shadow: 3px 3px 0 rgba(107, 79, 58, 0.15);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -346,32 +370,38 @@ body {
 
 .game-card:hover {
   transform: translate(-2px, -2px);
-  box-shadow: 6px 6px 0px var(--navy);
+  box-shadow: 5px 5px 0 rgba(107, 79, 58, 0.25);
 }
 
 /* Colored top section — holds the icon */
 .game-card-top {
-  padding: 28px 16px 20px;
+  padding: 0;
+  height: 200px;
   display: flex;
   justify-content: center;
   align-items: center;
+  overflow: hidden;
 }
 
-/* White bottom section — holds all text + button */
+/* Bottom section — holds all text + button */
 .game-card-body {
-  background: var(--white);
+  background: #EDD9B2;
   padding: 14px 12px 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
   flex: 1;
-  border-top: var(--border);
+  border-top: 2px solid #C9A87C;
 }
 
 .game-card-icon {
-  font-size: 64px;
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: contain;
   image-rendering: pixelated;
+  filter: saturate(0.65) brightness(1.18) contrast(0.82) hue-rotate(5deg);
 }
 
 .game-card-name {
@@ -379,6 +409,7 @@ body {
   font-size: 20px;
   color: var(--navy);
   line-height: 1.5;
+  text-transform: uppercase;
 }
 
 .game-card-desc {
@@ -396,32 +427,7 @@ body {
   /* font-weight: bold; */
 }
 
-/* ── Leaderboard Table ────────────────────────────────────── */
-.leaderboard-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 16px;
-}
-
-.leaderboard-table th {
-  font-family: var(--pixel-font);
-  font-size: 14px;
-  padding: 12px;
-  background-color: var(--mint);
-  border: var(--border);
-  text-align: left;
-}
-
-.leaderboard-table td {
-  padding: 12px;
-  border: 2px solid var(--navy);
-  font-size: 18px;
-  background-color: var(--white);
-}
-
-.leaderboard-table tr:nth-child(even) td {
-  background-color: var(--cream);
-}
+/* .leaderboard-table removed — replaced with card-row layout in Leaderboard.js */
 
 /* ── Profile Stats Grid ───────────────────────────────────── */
 .stats-grid {
@@ -440,30 +446,30 @@ body {
 }
 
 .stat-box-label {
-  font-size: 16px;
+  font-size: var(--font-base);
   color: var(--brown);
   margin-bottom: 8px;
 }
 
 .stat-box-value {
   font-family: var(--pixel-font);
-  font-size: 20px;
+  font-size: var(--font-base);
   color: var(--navy);
 }
 
 /* ── No NFT Banner ────────────────────────────────────────── */
 .no-nft-banner {
-  background-color: var(--peach);
-  border: var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background-color: #EDD9B2;
+  border: 2px solid #C9A87C;
+  border-radius: 20px;
+  box-shadow: 3px 3px 0 rgba(107, 79, 58, 0.15);
   padding: 24px;
   text-align: center;
   margin-bottom: 24px;
 }
 
 .no-nft-banner p {
-  font-size: 20px;
+  font-size: var(--font-base);
   margin-bottom: 16px;
   color: var(--navy);
 }
@@ -484,45 +490,31 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 32px;
-  padding: 48px 64px 0 64px;
-  background: linear-gradient(180deg, #c8ecf8 0%, #d8f0c0 55%, #8fc96c 100%);
-  border-bottom: var(--border);
+  padding: 48px 64px 48px 64px;
+  background: linear-gradient(180deg, #A7D3E8 0%, #A7D28D 55%, #7FB069 100%);
+  border-bottom: 2px solid #C9A87C;
   overflow: hidden;
   min-height: 380px;
 }
 
-/* Tiled grass texture at the bottom of the hero */
-.hero::before {
-  content: "";
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  right: 0;
-  height: 100px;
-  background-image: url("./assets/Grass.png");
-  background-repeat: repeat-x;
-  background-size: auto 100px;
-  image-rendering: pixelated;
-  opacity: 0.6;
-}
 
-/* Wooden house decorative image — centered behind content */
+/* Wooden house decorative image — centered within hero */
 .hero-house {
   position: absolute;
-  bottom: 0;
+  top: 50%;
   left: 50%;
   image-rendering: pixelated;
   z-index: 0;
-  opacity: 0.85;
+  opacity: 1;
   height: 340px;
   animation: heroFloat 5s ease-in-out infinite;
-  transform-origin: bottom center;
+  transform-origin: center center;
 }
 
 @keyframes heroFloat {
-  0%   { transform: translateX(-50%) translateY(0px); }
-  50%  { transform: translateX(-50%) translateY(-8px); }
-  100% { transform: translateX(-50%) translateY(0px); }
+  0%   { transform: translate(-50%, -50%) translateY(0px); }
+  50%  { transform: translate(-50%, -50%) translateY(-8px); }
+  100% { transform: translate(-50%, -50%) translateY(0px); }
 }
 
 .hero-left {
@@ -563,10 +555,10 @@ body {
 
 /* ── Player Card (hero right panel) ──────────────────────── */
 .player-card {
-  background-color: rgba(255, 253, 249, 0.95);
-  border: var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  background-color: #EDD9B2;
+  border: 2px solid #C9A87C;
+  border-radius: 20px;
+  box-shadow: 3px 3px 0 rgba(107, 79, 58, 0.15);
   padding: 20px;
 }
 
@@ -580,7 +572,7 @@ body {
 }
 
 .stat-chip.gold  { background-color: var(--gold); }
-.stat-chip.mint  { background-color: var(--mint); }
+.stat-chip.mint  { background-color: var(--green-light); }
 .stat-chip.peach { background-color: var(--peach); }
 
 .stat-chip-icon  { font-size: 26px; }

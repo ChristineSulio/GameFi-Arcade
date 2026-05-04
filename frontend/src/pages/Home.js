@@ -6,11 +6,11 @@ import SpriteButton from '../components/SpriteButton';
 import { ethers } from 'ethers';
 
 const GAMES = [
-  { id: 'wordguess',    name: 'Word Quest',    icon: '📜', reward: 'Up to 20 GOLD', description: 'Guess the word in 6 tries', color: '#e4c1f9' },
-  { id: 'memorymatch',  name: 'Mind Match',    icon: '🧠', reward: 'Up to 20 GOLD', description: 'Match all pairs to win',    color: '#ffd3b6' },
-  { id: 'snake',        name: 'Snake Harvest', icon: '🐍', reward: 'Up to 25 GOLD', description: 'Eat apples, grow longer',   color: '#a8e6cf' },
-  { id: 'brickbreaker', name: 'Brick Breaker', icon: '🧱', reward: 'Up to 15 GOLD', description: 'Break all the bricks',     color: '#f6c453' },
-  { id: 'connectfour',  name: 'Connect Four',  icon: '🔴', reward: 'Up to 10 GOLD', description: 'Connect 4 to win',          color: '#bdeefe' },
+  { id: 'wordguess',    name: 'Word Quest',    icon: '/assets/icon-wordguess.png',    reward: 'Up to 20 GOLD', description: 'Guess the word in 6 tries', color: '#B79AC8' },
+  { id: 'memorymatch',  name: 'Mind Match',    icon: '/assets/icon-memorymatch.png',  reward: 'Up to 20 GOLD', description: 'Match all pairs to win',    color: '#F7B37A' },
+  { id: 'snake',        name: 'Snake Harvest', icon: '/assets/icon-snake.png',        reward: 'Up to 25 GOLD', description: 'Eat apples, grow longer',   color: '#A7D28D' },
+  { id: 'brickbreaker', name: 'Brick Breaker', icon: '/assets/icon-brickbreaker.png', reward: 'Up to 15 GOLD', description: 'Break all the bricks',     color: '#F2C94C' },
+  { id: 'connectfour',  name: 'Connect Four',  icon: '/assets/icon-connectfour.png',  reward: 'Up to 10 GOLD', description: 'Connect 4 to win',          color: '#A7D3E8' },
 ];
 
 function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, lastDailyClaim, loading, claimFaucet, formatGold, setPage, connect }) {
@@ -87,8 +87,8 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
         {/* Left — tagline + CTA buttons */}
         <div className="hero-left">
           <h1 className="hero-title">
-            PLAY <span style={{ color: '#4a9e6b' }}>MINI</span> GAMES,<br />
-            EARN <span style={{ color: '#e0b93a' }}>GOLD</span> TOKENS.
+            PLAY <span style={{ color: '#7FB069' }}>MINI</span> GAMES,<br />
+            EARN <span style={{ color: '#D4A72C' }}>GOLD</span> TOKENS.
           </h1>
           <p className="hero-sub">
             Welcome to Pixel Grove, where fun meets blockchain.<br />
@@ -96,17 +96,17 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
           </p>
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', position: 'relative', zIndex: 2 }}>
             {hasNFT && (
-              <button className="btn-pixel" style={{ background: '#ff8c69', fontSize: '16px', padding: '12px 24px' }} onClick={() => setPage('wordguess')}>
+              <button className="btn-pixel" style={{ background: '#EDD9B2', border: '2px solid #C9A87C', color: 'var(--navy)' }} onClick={() => setPage('wordguess')}>
                 ▶ Start Playing
               </button>
             )}
             {!account && (
-              <button className="btn-pixel green" style={{ fontSize: '16px', padding: '12px 24px' }} onClick={connect}>
+              <button className="btn-pixel" style={{ background: '#EDD9B2', border: '2px solid #C9A87C', color: 'var(--navy)' }} onClick={connect}>
                 🔗 Connect Wallet
               </button>
             )}
             {account && !hasNFT && (
-              <button className="btn-pixel" style={{ fontSize: '16px', padding: '12px 24px' }} onClick={() => setPage('profile')}>
+              <button className="btn-pixel" onClick={() => setPage('profile')}>
                 🌱 Mint Player NFT
               </button>
             )}
@@ -119,7 +119,7 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
             <div className="player-card">
               <div style={{ textAlign: 'center', padding: '12px' }}>
                 <div style={{ fontSize: '40px', marginBottom: '12px' }}>🌿</div>
-                <p style={{ fontSize: '15px', color: 'var(--brown)' }}>
+                <p style={{ fontSize: 'var(--font-sm)', color: 'var(--brown)' }}>
                   Connect your wallet to view your player stats
                 </p>
               </div>
@@ -128,8 +128,8 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
             <div className="player-card">
               <div style={{ textAlign: 'center', padding: '12px' }}>
                 <div style={{ fontSize: '40px', marginBottom: '12px' }}>🌱</div>
-                <p style={{ fontSize: '15px', marginBottom: '12px' }}>Mint your Player NFT!</p>
-                <p style={{ fontSize: '13px', color: 'var(--brown)', marginBottom: '16px' }}>Includes 10 GOLD welcome bonus 🎁</p>
+                <p style={{ marginBottom: '12px' }}>Mint your Player NFT!</p>
+                <p style={{ fontSize: 'var(--font-sm)', color: 'var(--brown)', marginBottom: '16px' }}>Includes 10 GOLD welcome bonus 🎁</p>
                 <button className="btn-pixel green" onClick={() => setPage('profile')}>Mint NFT</button>
               </div>
             </div>
@@ -139,10 +139,10 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '14px' }}>
                 <div style={{ fontSize: '40px' }}>🧑‍🌾</div>
                 <div>
-                  <div style={{ fontFamily: 'var(--pixel-font)', fontSize: '22px' }}>
+                  <div style={{ fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)', color: 'var(--brown)' }}>
                     Hi, {stats?.name || '...'}
                   </div>
-                  <div style={{ fontSize: '18px', color: 'var(--brown)', marginTop: '2px' }}>
+                  <div style={{ fontSize: 'var(--font-sm)', color: 'var(--brown)', opacity: 0.8, marginTop: '2px' }}>
                     Level {stats?.level?.toString() || '1'} ⭐
                   </div>
                 </div>
@@ -169,10 +169,10 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
 
               {/* Daily faucet button */}
               <button
-                className="btn-pixel gold"
+                className="btn-pixel gold small"
                 onClick={handleFaucet}
                 disabled={loading || !!cooldown}
-                style={{ width: '100%', fontSize: '14px' }}
+                style={{ width: '100%' }}
               >
                 {cooldown ? `⏳ Available in ${cooldown}` : '🪙 Claim Daily 10 GOLD'}
               </button>
@@ -188,7 +188,7 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
       ══════════════════════════════════════════════════════ */}
       <div style={{ padding: '32px 64px' }}>
 
-        <h2 className="page-title">🎮 Featured Games</h2>
+        <h2 className="page-title">FEATURED GAMES</h2>
 
         {/* Low balance warning */}
         {account && parseFloat(ethers.formatEther(goldBalance)) < 1 && (
@@ -204,7 +204,7 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
 
               {/* Colored top section with icon */}
               <div className="game-card-top" style={{ background: game.color }}>
-                <div className="game-card-icon">{game.icon}</div>
+                <img src={game.icon} alt={game.name} className="game-card-icon" />
               </div>
 
               {/* White bottom section with text + button */}
@@ -226,34 +226,6 @@ function Home({ account, contracts, hasNFT, goldBalance, stats, dailyEarned, las
           ))}
         </div>
 
-        {/* ══════════════════════════════════════════════════
-            MINI LEADERBOARD PREVIEW
-        ══════════════════════════════════════════════════ */}
-        {topPlayers.length > 0 && (
-          <div style={{ marginTop: '48px', maxWidth: '480px' }}>
-            <h2 className="page-title">🏆 Leaderboard</h2>
-            <div className="card">
-              {topPlayers.map((p, i) => (
-                <div key={p.address} style={{
-                  display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-                  padding: '12px 0',
-                  borderBottom: i < topPlayers.length - 1 ? '2px solid var(--cream)' : 'none',
-                }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <span style={{ fontSize: '20px' }}>{i === 0 ? '🥇' : i === 1 ? '🥈' : '🥉'}</span>
-                    <span style={{ fontWeight: 'bold', fontSize: '16px' }}>{p.name}</span>
-                  </div>
-                  <span style={{ color: 'var(--gold-dark)', fontWeight: 'bold', fontSize: '15px' }}>
-                    🪙 {formatGold(p.lifetimeEarned)}
-                  </span>
-                </div>
-              ))}
-              <button className="btn-pixel" onClick={() => setPage('leaderboard')} style={{ marginTop: '16px', width: '100%' }}>
-                View Full Leaderboard
-              </button>
-            </div>
-          </div>
-        )}
 
       </div>
     </div>

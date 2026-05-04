@@ -15,9 +15,9 @@ const SNAKE_REWARDS = [
 ];
 
 const GRID   = 20;         // cells in each direction
-const CELL   = 20;         // pixels per cell
-const W      = GRID * CELL; // canvas width  (400px)
-const H      = GRID * CELL; // canvas height (400px)
+const CELL   = 28;         // pixels per cell
+const W      = GRID * CELL; // canvas width  (560px)
+const H      = GRID * CELL; // canvas height (560px)
 const TICK   = 140;        // ms between moves
 
 const DIR = { UP: {x:0,y:-1}, DOWN: {x:0,y:1}, LEFT: {x:-1,y:0}, RIGHT: {x:1,y:0} };
@@ -69,9 +69,9 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
     ctx.clearRect(0, 0, W, H);
 
     // Background grid
-    ctx.fillStyle = '#d8f0c0';
+    ctx.fillStyle = '#E8D4A0';
     ctx.fillRect(0, 0, W, H);
-    ctx.strokeStyle = 'rgba(0,0,0,0.06)';
+    ctx.strokeStyle = 'rgba(107,79,58,0.12)';
     ctx.lineWidth = 0.5;
     for (let i = 0; i <= GRID; i++) {
       ctx.beginPath(); ctx.moveTo(i * CELL, 0); ctx.lineTo(i * CELL, H); ctx.stroke();
@@ -87,7 +87,7 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
 
     // Snake body
     snakeRef.current.forEach((seg, i) => {
-      const shade = i === 0 ? '#2c5e2c' : '#4a9e6b';
+      const shade = i === 0 ? '#5C8C4A' : '#6DBE57';
       ctx.fillStyle = shade;
       ctx.beginPath();
       ctx.roundRect(seg.x * CELL + 1, seg.y * CELL + 1, CELL - 2, CELL - 2, 4);
@@ -272,22 +272,22 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
       <button className="btn-pixel" onClick={() => {
         if (phase === 'playing') setShowQuit(true);
         else setPage('home');
-      }} style={{ marginBottom: 16, fontSize: 'var(--font-base)', padding: '12px 24px' }}>
+      }} style={{ marginBottom: 16 }}>
         ← Back
       </button>
-      <h1 className="page-title">🐍 Snake Harvest</h1>
+      <h1 className="page-title">Snake Harvest</h1>
 
       {/* ── Start screen ── */}
       {phase === 'start' && (
         <div className="card" style={{ textAlign: 'center' }}>
-          <div style={{ fontSize: 64, marginBottom: 12 }}>🐍</div>
+          <img src="/assets/icon-snake.png" alt="" style={{ width: 120, height: 'auto', imageRendering: 'pixelated', marginBottom: 12 }} />
           <h2>Eat apples, grow longer!</h2>
           <p>
             Use arrow keys (or WASD) to control the snake.
             Hit a wall or yourself = game over.
           </p>
           <div>
-            <button className="btn-pixel green" onClick={handleStart} style={{ fontSize: 'var(--font-base)', padding: '12px 28px' }}>
+            <button className="btn-pixel green" onClick={handleStart}>
               ▶ Pay 1 GOLD &amp; Start
             </button>
           </div>
@@ -340,8 +340,8 @@ function Snake({ account, contracts, goldBalance, refresh, formatGold, setPage }
           <p>Balance: 🪙 {formatGold(goldBalance)} GOLD</p>
           {txMsg && <p className="tx-error">{txMsg}</p>}
           <div style={{ display: 'flex', gap: 12, justifyContent: 'center', marginTop: 16 }}>
-            <button className="btn-pixel green" onClick={playAgain}>Play Again</button>
-            <button className="btn-pixel" onClick={() => setPage('home')}>Home</button>
+            <button className="btn-pixel green large" onClick={playAgain}>Play Again</button>
+            <button className="btn-pixel large" onClick={() => setPage('home')}>Home</button>
           </div>
         </div>
       )}

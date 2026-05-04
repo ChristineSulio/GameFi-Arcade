@@ -55,7 +55,7 @@ function Profile({
   if (!account) {
     return (
       <div className="page">
-        <div className="no-nft-banner">
+        <div className="card" style={{ textAlign: 'center' }}>
           <p>Connect your wallet to view your profile.</p>
         </div>
       </div>
@@ -64,21 +64,19 @@ function Profile({
 
   return (
     <div className="page">
-      <h1 className="page-title">🧑‍🌾 Player Profile</h1>
+      <h1 className="page-title">PLAYER PROFILE</h1>
 
       {/* ── Wallet info ── */}
       <div className="card" style={{ marginBottom: '24px' }}>
-        <p style={{ fontSize: '18px', color: 'var(--brown)', marginBottom: '8px' }}>Wallet</p>
-        <p style={{ fontFamily: 'monospace', fontSize: '16px' }}>{account}</p>
+        <h2 style={{ marginBottom: '12px' }}>Wallet</h2>
+        <p style={{ fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-sm)' }}>{account}</p>
       </div>
 
       {/* ── No NFT — mint form ── */}
       {!hasNFT && (
         <div className="card" style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: '20px', marginBottom: '16px' }}>
-            Mint Your Player NFT
-          </h2>
-          <p style={{ fontSize: '18px', color: 'var(--brown)', marginBottom: '16px' }}>
+          <h2 style={{ marginBottom: '16px' }}>Mint Your Player NFT</h2>
+          <p style={{ marginBottom: '16px' }}>
             One NFT per wallet. Choose a unique name. You'll receive 10 GOLD as a welcome bonus!
           </p>
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
@@ -90,10 +88,10 @@ function Profile({
               maxLength={32}
               style={{
                 padding: '10px 14px',
-                border: '3px solid var(--navy)',
+                border: 'var(--border)',
                 borderRadius: '8px',
                 fontFamily: 'var(--body-font)',
-                fontSize: '18px',
+                fontSize: 'var(--font-base)',
                 flex: 1,
                 background: 'var(--cream)',
               }}
@@ -105,28 +103,31 @@ function Profile({
         </div>
       )}
 
-      {/* ── Has NFT — stats ── */}
+      {/* ── Has NFT — identity + stats in one card ── */}
       {hasNFT && stats && (
-        <>
-          <div className="card" style={{ marginBottom: '24px', textAlign: 'center' }}>
+        <div className="card" style={{ marginBottom: '24px', display: 'flex', alignItems: 'center', gap: '32px' }}>
+          {/* Left: avatar + name + level */}
+          <div style={{ textAlign: 'center', flex: 1 }}>
             <div style={{ fontSize: '56px', marginBottom: '8px' }}>🧑‍🌾</div>
-            <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: '22px', marginBottom: '12px' }}>
-              {stats.name}
-            </h2>
+            <h2 style={{ marginBottom: '12px' }}>{stats.name}</h2>
             <div style={{
               display: 'inline-block',
-              background: 'var(--mint)',
-              border: '3px solid var(--navy)',
+              background: 'var(--green-light)',
+              border: 'var(--border)',
               borderRadius: '8px',
               padding: '6px 16px',
               fontFamily: 'var(--pixel-font)',
-              fontSize: '16px',
+              fontSize: 'var(--font-sm)',
             }}>
               Level {stats.level.toString()}
             </div>
           </div>
 
-          <div className="stats-grid" style={{ marginBottom: '24px' }}>
+          {/* Divider */}
+          <div style={{ width: '2px', alignSelf: 'stretch', background: '#C9A87C', borderRadius: 2 }} />
+
+          {/* Right: stats stacked */}
+          <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
             <div className="stat-box">
               <div className="stat-box-label">GOLD Balance</div>
               <div className="stat-box-value">🪙 {formatGold(goldBalance)}</div>
@@ -139,21 +140,15 @@ function Profile({
               <div className="stat-box-label">Lifetime Earned</div>
               <div className="stat-box-value">💰 {formatGold(stats.lifetimeEarned)}</div>
             </div>
-            <div className="stat-box">
-              <div className="stat-box-label">Level</div>
-              <div className="stat-box-value">⭐ {stats.level.toString()}</div>
-            </div>
           </div>
-        </>
+        </div>
       )}
 
       {/* ── Daily faucet ── */}
       {hasNFT && (
         <div className="card" style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'var(--pixel-font)', fontSize: '20px', marginBottom: '12px' }}>
-            Daily Faucet
-          </h2>
-          <p style={{ fontSize: '18px', color: 'var(--brown)', marginBottom: '16px' }}>
+          <h2 style={{ marginBottom: '12px' }}>Daily Faucet</h2>
+          <p style={{ marginBottom: '16px' }}>
             Claim 10 free GOLD once every 24 hours.
           </p>
           <button className="btn-pixel gold" onClick={handleFaucet} disabled={loading}>

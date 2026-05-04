@@ -1,7 +1,6 @@
 // frontend/src/pages/Leaderboard.js
 
 import { useState, useEffect } from "react";
-import { ethers } from "ethers";
 
 function Leaderboard({ contracts, formatGold }) {
   const [players, setPlayers] = useState([]);
@@ -35,61 +34,108 @@ function Leaderboard({ contracts, formatGold }) {
     }
   };
 
+  // Left accent color for top 3
+  const rankAccent = (i) => {
+    if (i === 0) return '#F2C94C';
+    if (i === 1) return '#C8C8C8';
+    if (i === 2) return '#D4956A';
+    return 'rgba(255,255,255,0.4)';
+  };
+
   const medal = (i) => {
     if (i === 0) return '🥇';
     if (i === 1) return '🥈';
     if (i === 2) return '🥉';
-    return `#${i + 1}`;
+    return <span style={{ fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-sm)', color: 'var(--navy)' }}>#{i + 1}</span>;
   };
+
 
   return (
     <div className="page">
-      <h1 className="page-title">🏆 Leaderboard</h1>
+      <h1 className="page-title">LEADERBOARD</h1>
 
-      <button className="btn-pixel" onClick={fetchLeaderboard} disabled={loading} style={{ marginBottom: '24px' }}>
-        {loading ? 'Loading...' : '🔄 Refresh'}
+      <button className="btn-pixel small" onClick={fetchLeaderboard} disabled={loading} style={{ marginBottom: '24px', background: '#A7D3E8', border: '2px solid #7AB8D4', color: 'var(--navy)' }}>
+        {loading ? 'Loading...' : 'Refresh'}
       </button>
 
       {error && <div className="error-msg">{error}</div>}
 
       {!loading && players.length === 0 && !error && (
-        <div className="card" style={{ textAlign: 'center', padding: '40px' }}>
-          <p style={{ fontSize: '20px', color: 'var(--brown)' }}>
-            No players on the leaderboard yet. Be the first to win a game! 🌿
+        <div className="card" style={{ textAlign: 'center' }}>
+          <p>
+            No players yet. Be the first to win a game! 🌿
           </p>
         </div>
       )}
 
       {players.length > 0 && (
-        <table className="leaderboard-table">
-          <thead>
-            <tr>
-              <th>Rank</th>
-              <th>Player</th>
-              <th>Level</th>
-              <th>Wins</th>
-              <th>Lifetime Earned</th>
-            </tr>
-          </thead>
-          <tbody>
+        <div className="card">
+
+          {/* Column headers */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '70px 1fr 120px 120px 160px',
+            padding: '0 8px 16px 8px',
+            fontFamily: 'var(--pixel-font)',
+            fontSize: 'var(--font-base)',
+            color: 'var(--brown)',
+            borderBottom: '2px solid #C9A87C',
+            marginBottom: 10,
+          }}>
+            <span>Rank</span>
+            <span>Player</span>
+            <span style={{ textAlign: 'center' }}>Level</span>
+            <span style={{ textAlign: 'center' }}>Wins</span>
+            <span style={{ textAlign: 'center' }}>Earned</span>
+          </div>
+
+          {/* Player rows */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {players.map((player, i) => (
-              <tr key={player.address}>
-                <td style={{ fontFamily: 'var(--pixel-font)', fontSize: '18px', textAlign: 'center' }}>
+              <div key={player.address} style={{
+                display: 'grid',
+                gridTemplateColumns: '70px 1fr 120px 120px 160px',
+                alignItems: 'center',
+                padding: '12px 8px',
+                background: 'rgba(255, 246, 232, 0.65)',
+                borderRadius: 12,
+                borderLeft: `4px solid ${rankAccent(i)}`,
+                gap: 8,
+              }}>
+                {/* Rank */}
+                <div style={{ fontSize: 26, textAlign: 'center', lineHeight: 1 }}>
                   {medal(i)}
-                </td>
-                <td>
-                  <div style={{ fontWeight: 'bold', fontSize: '18px' }}>{player.name}</div>
-                  <div style={{ fontSize: '14px', color: 'var(--brown)', fontFamily: 'monospace' }}>
-                    {player.address.slice(0, 6)}...{player.address.slice(-4)}
+                </div>
+
+                {/* Name + address */}
+                <div>
+                  <div style={{ fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)', color: 'var(--navy)' }}>
+                    {player.name}
                   </div>
-                </td>
-                <td style={{ textAlign: 'center', fontSize: '18px' }}>⭐ {player.level.toString()}</td>
-                <td style={{ textAlign: 'center', fontSize: '18px' }}>🏆 {player.totalWins.toString()}</td>
-                <td style={{ textAlign: 'center', fontSize: '18px' }}>🪙 {formatGold(player.lifetimeEarned)} GOLD</td>
-              </tr>
+                  <div style={{ fontSize: 'var(--font-sm)', color: 'var(--brown)', fontFamily: 'var(--pixel-font)', marginTop: 2 }}>
+                    {player.address.slice(0, 6)}…{player.address.slice(-4)}
+                  </div>
+                </div>
+
+                {/* Level */}
+                <div style={{ textAlign: 'center', fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)', color: 'var(--navy)' }}>
+                  ⭐ {player.level.toString()}
+                </div>
+
+                {/* Wins */}
+                <div style={{ textAlign: 'center', fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)', color: 'var(--navy)' }}>
+                  🏆 {player.totalWins.toString()}
+                </div>
+
+                {/* Lifetime earned */}
+                <div style={{ textAlign: 'center', fontFamily: 'var(--pixel-font)', fontSize: 'var(--font-base)', color: '#D4A72C' }}>
+                  🪙 {formatGold(player.lifetimeEarned)}
+                </div>
+              </div>
             ))}
-          </tbody>
-        </table>
+          </div>
+
+        </div>
       )}
     </div>
   );

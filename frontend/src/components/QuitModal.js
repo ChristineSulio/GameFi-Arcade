@@ -13,8 +13,8 @@ function QuitModal({ onConfirm, onCancel }) {
         <h2>Are you sure you want to quit?</h2>
         <p style={{ marginBottom: 28 }}>Your 1 GOLD entry fee is non-refundable.</p>
         <div style={{ display: 'flex', gap: 12, justifyContent: 'center' }}>
-          <button className="btn-pixel" onClick={onConfirm} style={{ fontSize: 'var(--font-base)', padding: '14px 28px' }}>Yes, quit</button>
-          <button className="btn-pixel green" onClick={onCancel} style={{ fontSize: 'var(--font-base)', padding: '14px 28px' }}>Keep playing</button>
+          <button className="btn-pixel large" onClick={onConfirm}>Yes, quit</button>
+          <button className="btn-pixel green large" onClick={onCancel}>Keep playing</button>
         </div>
       </div>
     </div>
